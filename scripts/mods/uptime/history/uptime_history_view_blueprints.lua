@@ -163,21 +163,15 @@ local blueprints = {
                 callback(parent, callback_name, widget, entry)()
             end
 
-			local display_name = entry.display_name
-			local display_name2 = entry.display_name2
-			content.text = Managers.localization:localize(display_name)
-			content.text2 = ""
+            -- Set up text content
+            content.text = entry.title
+            content.text2 = entry.subtitle
 
-			-- Check if mod has shrink_text function, otherwise use a simple version
-			if mod.shrink_text then
-				mod:shrink_text(content.text, widget.style.text, settings_value_width, parent._ui_renderer)
-				mod:shrink_text(content.text2, widget.style.text2, settings_value_width, parent._ui_renderer)
-			end
-
-			content.icon = entry.icon
-			content.entry = entry
-		end
-	},
+            -- Set up icon and entry reference
+            content.icon = entry.icon
+            content.entry = entry
+        end
+    },
 }
 
 return settings("UptimeHistoryViewContentBlueprints", blueprints)

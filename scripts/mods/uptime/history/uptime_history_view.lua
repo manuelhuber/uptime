@@ -4,11 +4,9 @@ local DMF = get_mod("DMF")
 local ScriptWorld = mod:original_require("scripts/foundation/utilities/script_world")
 local InputUtils = mod:original_require("scripts/managers/input/input_utils")
 local UIRenderer = mod:original_require("scripts/managers/ui/ui_renderer")
-local UIFonts = mod:original_require("scripts/managers/ui/ui_fonts")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local UIWidgetGrid = mod:original_require("scripts/ui/widget_logic/ui_widget_grid")
 local ViewElementInputLegend = mod:original_require("scripts/ui/view_elements/view_element_input_legend/view_element_input_legend")
-local TextUtilities = mod:original_require("scripts/utilities/ui/text")
 
 local CATEGORIES_GRID = 1
 local UptimeHistoryView = class("UptimeHistoryView", "BaseView")
@@ -39,7 +37,6 @@ UptimeHistoryView._setup_offscreen_gui = function(self)
     self._offscreen_viewport_name = viewport_name
     self._ui_offscreen_renderer = ui_manager:create_renderer(class_name .. "_ui_offscreen_renderer", self._offscreen_world)
 end
-
 
 UptimeHistoryView.on_enter = function(self)
     UptimeHistoryView.super.on_enter(self)
@@ -79,7 +76,7 @@ UptimeHistoryView.present_category_widgets = function(self, category)
     if self.entry then
         -- Display the uptime data for the selected entry
         mod:echo("[Uptime] Selected entry: " .. self.entry.mission.name .. " (" .. self.entry.mission.formatted_time .. ")")
-        
+
         -- Display information about the buffs
         for buff_name, buff_data in pairs(self.entry.buffs) do
             mod:echo(string.format("[Uptime] Buff: %s - %.1f%s uptime, %.2f avg stacks",
@@ -96,122 +93,112 @@ end
 UptimeHistoryView._setup_content_grid_scrollbar = function(self, grid, widget_id, grid_scenegraph_id, grid_pivot_scenegraph_id)
     local widgets_by_name = self._widgets_by_name
     local scrollbar_widget = widgets_by_name[widget_id]
-  
+
     -- Apply DMF scrolling speed setting if available
     if DMF:get("dmf_options_scrolling_speed") and widgets_by_name["scrollbar"] then
         widgets_by_name["scrollbar"].content.scroll_speed = DMF:get("dmf_options_scrolling_speed")
     end
-  
+
     grid:assign_scrollbar(scrollbar_widget, grid_pivot_scenegraph_id, grid_scenegraph_id)
     grid:set_scrollbar_progress(0)
 end
 
 -- Set up the category configuration for the history view
 UptimeHistoryView._setup_category_config = function(self, scan_dir)
-    if self._category_content_widgets then
-        for i = 1, #self._category_content_widgets do
-            local widget = self._category_content_widgets[i]
+    -- Clear existing widgets if any
+    if self._entry_content_widgets then
+        for i = 1, #self._entry_content_widgets do
+            local widget = self._entry_content_widgets[i]
             self:_unregister_widget_name(widget.name)
         end
-        self._category_content_widgets = {}
+        self._entry_content_widgets = {}
     end
-  
+
     -- Get all uptime history entries
     local config_categories = mod:get_history_entries(scan_dir)
     local entries = {}
-    local categories_by_display_name = {}
-  
+    local entries_by_title = {}
+
+    -- Process each history entry
     for i = 1, #config_categories do
         local category_config = config_categories[i]
-        local mission_name = ""
-        local mission_subname = ""
-        
-        if category_config.mission and category_config.mission.name then
-            mission_name = " | " .. category_config.mission.name
-            mission_subname = "\n" .. category_config.mission.formatted_time
-        end
-
-        mod:add_global_localize_strings({
-            ["loc_uptime_history_view_entry_"..tostring(category_config.date)] = {
-                en = tostring(category_config.date)..mission_name..mission_subname,
-            },
-        })
-        local category_display_name = "loc_uptime_history_view_entry_"..tostring(category_config.date)
-
-        -- Create a list of buff names for the second line
-        local buffs = {}
-        if category_config.buffs then
-            for buff_name, _ in pairs(category_config.buffs) do
-                buffs[#buffs+1] = buff_name
-            end
-        end
-        
-        mod:add_global_localize_strings({
-            ["loc_uptime_history_view_entry_"..tostring(category_config.date).."_buffs"] = {
-                en = table.concat(buffs, ", "),
-            },
-        })
-        local category_display_name2 = "loc_uptime_history_view_entry_"..tostring(category_config.date).."_buffs"
-
-        local entry = {
-            widget_type = "settings_button",
-            display_name = category_display_name,
-            display_name2 = category_display_name2,
-            file = category_config.file,
-            file_path = category_config.file_path,
-            pressed_function = function (parent, widget, entry)
-                self._category_content_grid:select_widget(widget)
-    
-                local widget_name = widget.name
-    
-                self:present_category_widgets(category_display_name)
-    
-                local selected_navigation_column = self._selected_navigation_column_index
-    
-                if selected_navigation_column then
-                    self:_change_navigation_column(selected_navigation_column + 1)
-                end
-            end,
-            select_function = function (parent, widget, entry)
-                self:present_category_widgets(category_display_name)
-            end
-        }
+        local entry = self:_create_category_entry(category_config)
         entries[#entries + 1] = entry
-        categories_by_display_name[category_display_name] = entry
+        entries_by_title[entry.title] = entry
     end
-  
+
+    -- Set default category if available
     self._default_category = config_categories[1] and config_categories[1].date or nil
+
+    -- Set up the grid and widgets
     local scenegraph_id = "grid_content_pivot"
     local callback_name = "cb_on_category_pressed"
-    self._category_content_widgets, self._category_alignment_list = self:_setup_content_widgets(entries, scenegraph_id, callback_name)
+    self._entry_content_widgets, self._category_alignment_list = self:_setup_content_widgets(entries, scenegraph_id, callback_name)
+
+    -- Configure grid and scrollbar
     local scrollbar_widget_id = "scrollbar"
     local grid_scenegraph_id = "background"
     local grid_pivot_scenegraph_id = "grid_content_pivot"
     local grid_spacing = self._settings.grid_spacing
-    self._category_content_grid = self:_setup_grid(self._category_content_widgets, self._category_alignment_list, grid_scenegraph_id, grid_spacing, true)
-  
-    self:_setup_content_grid_scrollbar(self._category_content_grid, scrollbar_widget_id, grid_scenegraph_id, grid_pivot_scenegraph_id)
-  
-    self._categories_by_display_name = categories_by_display_name
-    self._navigation_widgets = {
-      self._category_content_widgets
-    }
-    self._navigation_grids = {
-      self._category_content_grid
+    self._entries_content_grid = self:_setup_grid(self._entry_content_widgets, self._category_alignment_list, grid_scenegraph_id, grid_spacing, true)
+    self:_setup_content_grid_scrollbar(self._entries_content_grid, scrollbar_widget_id, grid_scenegraph_id, grid_pivot_scenegraph_id)
+
+    -- Set up navigation
+    self._navigation_widgets = { self._entry_content_widgets }
+    self._navigation_grids = { self._entries_content_grid }
+end
+
+-- Create a category entry from config data
+UptimeHistoryView._create_category_entry = function(self, category_config)
+    local mission_name = ""
+    local mission_subname = ""
+
+    -- Add mission info if available
+    if category_config.mission and category_config.mission.name then
+        mission_name = " | " .. category_config.mission.name
+        mission_subname = "\n" .. category_config.mission.formatted_time
+    end
+
+    -- Create localized string for the entry title
+    local date_string = tostring(category_config.date)
+
+    local title = date_string .. mission_name .. mission_subname
+    local subtitle = category_config.mission.player or ""
+    -- Create and return the entry
+    return {
+        widget_type = "settings_button",
+        title = title,
+        subtitle = subtitle,
+        file = category_config.file,
+        file_path = category_config.file_path,
+        pressed_function = function(parent, widget, entry)
+            self._entries_content_grid:select_widget(widget)
+            self:present_category_widgets(title)
+
+            local selected_navigation_column = self._selected_navigation_column_index
+            if selected_navigation_column then
+                self:_change_navigation_column(selected_navigation_column + 1)
+            end
+        end,
+        select_function = function(parent, widget, entry)
+            self:present_category_widgets(title)
+        end
     }
 end
 
-UptimeHistoryView._setup_grid = function (self, widgets, alignment_list, grid_scenegraph_id, spacing, use_is_focused)
+-- Set up a grid with the given widgets and settings
+UptimeHistoryView._setup_grid = function(self, widgets, alignment_list, grid_scenegraph_id, spacing, use_is_focused)
     local ui_scenegraph = self._ui_scenegraph
     local direction = "down"
     local grid = UIWidgetGrid:new(widgets, alignment_list, ui_scenegraph, grid_scenegraph_id, direction, spacing, nil, use_is_focused)
-    local render_scale = self._render_scale
-  
-    grid:set_render_scale(render_scale)
-  
+
+    -- Apply render scale to the grid
+    grid:set_render_scale(self._render_scale)
+
     return grid
 end
 
+-- Create widgets from content entries and set up their alignment
 UptimeHistoryView._setup_content_widgets = function(self, content, scenegraph_id, callback_name)
     local definitions = self._definitions
     local widget_definitions = {}
@@ -219,171 +206,199 @@ UptimeHistoryView._setup_content_widgets = function(self, content, scenegraph_id
     local alignment_list = {}
     local amount = #content
 
+    -- Process entries in reverse order (newest first)
     for i = amount, 1, -1 do
         local entry = content[i]
-        local verified = true
+        local widget_type = entry.widget_type
+        local template = self._blueprints[widget_type]
+        local size = template.size
+        local widget = nil
 
-        if verified then
-            local widget_type = entry.widget_type
-            local widget = nil
-            local template = self._blueprints[widget_type]
-            local size = template.size
-            local pass_template = template.pass_template
-
-            if pass_template and not widget_definitions[widget_type] then
-                local scenegraph_definition = definitions.scenegraph_definition
-                widget_definitions[widget_type] = UIWidget.create_definition(pass_template, scenegraph_id, nil, size)
-            end
-
-            local widget_definition = widget_definitions[widget_type]
-
-            if widget_definition then
-                local name = scenegraph_id .. "_widget_" .. i
-                widget = self:_create_widget(name, widget_definition)
-                widget.file = entry.file
-                widget.file_path = entry.file_path
-                local init = template.init
-
-                if init then
-                    init(self, widget, entry, callback_name)
-                end
-
-                local focus_group = entry.focus_group
-
-                if focus_group then
-                    widget.content.focus_group = focus_group
-                end
-
-                widgets[#widgets + 1] = widget
-            end
-
-            alignment_list[#alignment_list + 1] = widget or {
-                size = size
-            }
+        -- Create widget definition if not already created for this type
+        if template.pass_template and not widget_definitions[widget_type] then
+            widget_definitions[widget_type] = UIWidget.create_definition(
+                    template.pass_template,
+                    scenegraph_id,
+                    nil,
+                    size
+            )
         end
+
+        -- Create and initialize the widget
+        local widget_definition = widget_definitions[widget_type]
+        if widget_definition then
+            local name = scenegraph_id .. "_widget_" .. i
+            widget = self:_create_widget(name, widget_definition)
+
+            -- Copy file information to widget
+            widget.file = entry.file
+            widget.file_path = entry.file_path
+
+            -- Initialize widget with template
+            if template.init then
+                template.init(self, widget, entry, callback_name)
+            end
+
+            -- Set focus group if specified
+            if entry.focus_group then
+                widget.content.focus_group = entry.focus_group
+            end
+
+            widgets[#widgets + 1] = widget
+        end
+
+        -- Add to alignment list (either the widget or a placeholder with size)
+        alignment_list[#alignment_list + 1] = widget or { size = size }
     end
 
     return widgets, alignment_list
 end
 
+-- Update the grid navigation selection based on cursor or keyboard navigation
 UptimeHistoryView._update_grid_navigation_selection = function(self)
     local selected_column_index = self._selected_navigation_column_index
     local selected_row_index = self._selected_navigation_row_index
-  
+
+    -- Handle cursor navigation
     if self._using_cursor_navigation then
+        -- Clear selection when using cursor
         if selected_row_index or selected_column_index then
             self:_set_selected_navigation_widget(nil)
         end
     else
+        -- Handle keyboard navigation
         local navigation_widgets = self._navigation_widgets[selected_column_index]
         local selected_widget = navigation_widgets and navigation_widgets[selected_row_index] or self._selected_settings_widget
-    
+
         if selected_widget then
+            -- Ensure widget is properly selected in grid
             local selected_grid = self._navigation_grids[selected_column_index]
-    
             if not selected_grid or not selected_grid:selected_grid_index() then
                 self:_set_selected_navigation_widget(selected_widget)
             end
         elseif navigation_widgets or self._settings_content_widgets then
+            -- Set default widget if none selected
             self:_set_default_navigation_widget()
         elseif self._default_category then
+            -- Present default category if available
             self:present_category_widgets(self._default_category)
         end
     end
 end
 
+-- Change the navigation to a specific column
 UptimeHistoryView._change_navigation_column = function(self, column_index)
     local navigation_widgets = self._navigation_widgets
     local num_columns = #navigation_widgets
-    local success = false
-  
+
+    -- Validate column index and prevent multiple changes in same frame
     if column_index < 1 or num_columns < column_index or self._navigation_column_changed_this_frame then
-        return success
-    else
-        success = true
-        self._navigation_column_changed_this_frame = true
+        return false
     end
-  
+
+    -- Mark that we've changed column this frame
+    self._navigation_column_changed_this_frame = true
+
+    -- Get widgets in the target column
     local widgets = navigation_widgets[column_index]
-  
+
+    -- First try to find a widget that's already selected
     for i = 1, #widgets do
         local widget = widgets[i]
-        local content = widget.content
-        local hotspot = content.hotspot or content.button_hotspot
-    
+        local hotspot = widget.content.hotspot or widget.content.button_hotspot
+
         if hotspot and hotspot.is_selected then
             self:_set_selected_navigation_widget(widget)
-            return success
+            return true
         end
     end
-  
+
+    -- If no widget is selected, find the first visible one based on scrollbar position
     local navigation_grid = self._navigation_grids[column_index]
     local scrollbar_progress = navigation_grid:scrollbar_progress()
-  
+
     for i = 1, #widgets do
         local widget = widgets[i]
-        local content = widget.content
-        local hotspot = content.hotspot or content.button_hotspot
-    
+        local hotspot = widget.content.hotspot or widget.content.button_hotspot
+
         if hotspot then
             local scroll_position = navigation_grid:get_scrollbar_percentage_by_index(i) or 0
-    
+
             if scrollbar_progress <= scroll_position then
                 self:_set_selected_navigation_widget(widget)
-                return success
+                return true
             end
         end
     end
+
+    return false
 end
-  
+
+-- Set the default navigation widget by trying each column
 UptimeHistoryView._set_default_navigation_widget = function(self)
     local navigation_widgets = self._navigation_widgets
+
+    -- Try each column until we successfully change to one
     for i = 1, #navigation_widgets do
         if self:_change_navigation_column(i) then
             return
         end
     end
 end
-  
+
+-- Set the selected navigation widget and update all related UI elements
 UptimeHistoryView._set_selected_navigation_widget = function(self, widget)
     local widget_name = widget and widget.name
     local selected_row, selected_column = nil, nil
     local navigation_widgets = self._navigation_widgets
-  
+
+    -- Process each column to find and focus the selected widget
     for column_index = 1, #navigation_widgets do
         local widgets = navigation_widgets[column_index]
         local _, focused_grid_index = self:_set_focused_grid_widget(widgets, widget_name)
-    
+
+        -- If we found the widget in this column, mark it as selected
         if focused_grid_index then
             self:_set_selected_grid_widget(widgets, widget_name)
-    
             selected_row = focused_grid_index
             selected_column = column_index
         end
     end
-  
+
+    -- Update all navigation grids with the new selection
     local navigation_grids = self._navigation_grids
-  
     for column_index = 1, #navigation_grids do
-        local selected_grid = column_index == selected_column
+        local is_selected_column = column_index == selected_column
         local navigation_grid = navigation_grids[column_index]
-        navigation_grid:select_grid_index(selected_grid and selected_row or nil, nil, nil, column_index == CATEGORIES_GRID)
+
+        -- Only set grid index for the selected column
+        local grid_index = is_selected_column and selected_row or nil
+        navigation_grid:select_grid_index(
+                grid_index,
+                nil,
+                nil,
+                column_index == CATEGORIES_GRID
+        )
     end
-  
+
+    -- Store the selected indices for future reference
     self._selected_navigation_row_index = selected_row
     self._selected_navigation_column_index = selected_column
 end
 
+-- Set focus state for widgets in a grid based on the widget name
 UptimeHistoryView._set_focused_grid_widget = function(self, widgets, widget_name)
     local focused_widget = nil
     local focused_grid_index = nil
 
+    -- Process all widgets in the grid
     for i = 1, #widgets do
         local widget = widgets[i]
         local content = widget.content
         local hotspot = content.hotspot or content.button_hotspot
 
         if hotspot then
+            -- Set focus state based on widget name match
             if widget.name == widget_name then
                 hotspot.is_focused = true
                 focused_widget = widget
@@ -397,24 +412,20 @@ UptimeHistoryView._set_focused_grid_widget = function(self, widgets, widget_name
     return focused_widget, focused_grid_index
 end
 
+-- Set selection state for widgets in a grid based on the widget name
 UptimeHistoryView._set_selected_grid_widget = function(self, widgets, widget_name)
+    -- Process all widgets in the grid
     for i = 1, #widgets do
         local widget = widgets[i]
         local content = widget.content
         local hotspot = content.hotspot or content.button_hotspot
 
         if hotspot then
-            hotspot.is_selected = widget.name == widget_name
+            -- Set selection state based on widget name match
+            hotspot.is_selected = (widget.name == widget_name)
         end
     end
 end
-
--- ##### ███████╗██╗  ██╗██╗████████╗ #################################################################################
--- ##### ██╔════╝╚██╗██╔╝██║╚══██╔══╝ #################################################################################
--- ##### █████╗   ╚███╔╝ ██║   ██║    #################################################################################
--- ##### ██╔══╝   ██╔██╗ ██║   ██║    #################################################################################
--- ##### ███████╗██╔╝ ██╗██║   ██║    #################################################################################
--- ##### ╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝    #################################################################################
 
 UptimeHistoryView.on_exit = function(self)
     if self._input_legend_element then
@@ -428,15 +439,15 @@ UptimeHistoryView.on_exit = function(self)
 
     if self._ui_offscreen_renderer then
         self._ui_offscreen_renderer = nil
-    
+
         Managers.ui:destroy_renderer(self.__class_name .. "_ui_offscreen_renderer")
-    
+
         local offscreen_world = self._offscreen_world
         local offscreen_viewport_name = self._offscreen_viewport_name
-    
+
         ScriptWorld.destroy_viewport(offscreen_world, offscreen_viewport_name)
         Managers.ui:destroy_world(offscreen_world)
-    
+
         self._offscreen_viewport = nil
         self._offscreen_viewport_name = nil
         self._offscreen_world = nil
@@ -445,315 +456,411 @@ UptimeHistoryView.on_exit = function(self)
     UptimeHistoryView.super.on_exit(self)
 end
 
--- ##### ██████╗ █████╗ ██╗     ██╗     ██████╗  █████╗  ██████╗██╗  ██╗███████╗ #####################################
--- ##### ██╔════╝██╔══██╗██║     ██║     ██╔══██╗██╔══██╗██╔════╝██║ ██╔╝██╔════╝ #####################################
--- ##### ██║     ███████║██║     ██║     ██████╔╝███████║██║     █████╔╝ ███████╗ #####################################
--- ##### ██║     ██╔══██║██║     ██║     ██╔══██╗██╔══██║██║     ██╔═██╗ ╚════██║ #####################################
--- ##### ╚██████╗██║  ██║███████╗███████╗██████╔╝██║  ██║╚██████╗██║  ██╗███████║ #####################################
--- #####  ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝ #####################################
 
+-- Callback for when a category is pressed in the history view
 UptimeHistoryView.cb_on_category_pressed = function(self, widget, entry)
-    local pressed_function = entry.pressed_function
-  
-    -- Load the uptime history entry
+    -- Load the uptime history entry from file
     self.entry = mod:load_entry(widget.file_path)
-    
-    if pressed_function then
-        pressed_function(self, widget, entry)
+
+    -- Call the entry's pressed function if it exists
+    if entry.pressed_function then
+        entry.pressed_function(self, widget, entry)
     end
 end
 
+-- Callback for when the back button is pressed
 UptimeHistoryView.cb_on_back_pressed = function(self)
+    -- Close the uptime history view
     self.ui_manager:close_view("uptime_history_view")
 end
 
+-- Callback for when the delete button is pressed
 UptimeHistoryView.cb_delete_pressed = function(self)
-    if self.entry then
-        if _os.remove(self.entry.file_path) then
-            -- Remove from cache
-            local cache = mod:get_history_entries_cache()
-            local new_cache = {}
-            for _, c in pairs(cache) do
-                if c ~= self.entry.file then
-                    new_cache[#new_cache+1] = c
-                end
+    -- Only proceed if an entry is selected
+    if not self.entry then
+        return
+    end
+
+    -- Try to remove the file
+    if _os.remove(self.entry.file_path) then
+        -- Update the cache to remove the deleted entry
+        local cache = mod:get_history_entries_cache()
+        local new_cache = {}
+
+        for _, cache_entry in pairs(cache) do
+            if cache_entry ~= self.entry.file then
+                new_cache[#new_cache + 1] = cache_entry
             end
-            mod:set_history_entries_cache(new_cache)
-            
-            mod:echo("[Uptime] History entry deleted")
-            self.entry = nil
-            self:_setup_category_config()
         end
+
+        -- Save the updated cache
+        mod:set_history_entries_cache(new_cache)
+
+        -- Notify user and refresh the view
+        mod:echo("[Uptime] History entry deleted")
+        self.entry = nil
+        self:_setup_category_config()
     end
 end
 
+-- Callback for when the reload cache button is pressed
 UptimeHistoryView.cb_reload_cache_pressed = function(self)
+    -- Clear current entry and reload with scan_dir=true to force refresh
     self.entry = nil
     self:_setup_category_config(true)
 end
 
--- ##### ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗███████╗ ###########################################################
--- ##### ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝ ###########################################################
--- ##### ██║   ██║██████╔╝██║  ██║███████║   ██║   █████╗   ###########################################################
--- ##### ██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██╔══╝   ###########################################################
--- ##### ╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ███████╗ ###########################################################
--- #####  ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ###########################################################
 
+-- Main update function for the view
 UptimeHistoryView.update = function(self, dt, t, input_service, view_data)
     local drawing_view = view_data and view_data.drawing_view
     local using_cursor_navigation = Managers.ui:using_cursor_navigation()
 
+    -- Handle keybinding state
     if self:_handling_keybinding() then
+        -- Close keybind popup if view is not drawing or not using cursor
         if not drawing_view or not using_cursor_navigation then
             self:close_keybind_popup(true)
         end
 
+        -- Disable input while handling keybinding
         input_service = input_service:null_service()
     end
 
+    -- Process keybind rebinding
     self:_handle_keybind_rebind(dt, t, input_service)
 
+    -- Handle keybind popup closing timer
     local close_keybind_popup_duration = self._close_keybind_popup_duration
-
     if close_keybind_popup_duration then
         if close_keybind_popup_duration < 0 then
+            -- Timer expired, close popup
             self._close_keybind_popup_duration = nil
-
             self:close_keybind_popup(true)
         else
+            -- Update timer
             self._close_keybind_popup_duration = close_keybind_popup_duration - dt
         end
     end
 
-    local grid_length = self._category_content_grid:length()
-
+    -- Update grid length if changed
+    local grid_length = self._entries_content_grid:length()
     if grid_length ~= self._grid_length then
         self._grid_length = grid_length
     end
 
+    -- Update grid with appropriate input service
     local category_grid_is_focused = self._selected_navigation_column_index == CATEGORIES_GRID
     local category_grid_input_service = category_grid_is_focused and input_service or input_service:null_service()
+    self._entries_content_grid:update(dt, t, category_grid_input_service)
 
-    self._category_content_grid:update(dt, t, category_grid_input_service)
+    -- Update category widgets
     self:_update_category_content_widgets(dt, t)
 
+    -- Hide tooltip if widget is no longer hovered
     if self._tooltip_data and self._tooltip_data.widget and not self._tooltip_data.widget.content.hotspot.is_hover then
         self._tooltip_data = {}
         self._widgets_by_name.tooltip.content.visible = false
     end
 
+    -- Call parent update
     return UptimeHistoryView.super.update(self, dt, t, input_service)
 end
 
+-- Update the category content widgets (selection, focus, etc.)
 UptimeHistoryView._update_category_content_widgets = function(self, dt, t)
-    local category_content_widgets = self._category_content_widgets
-  
-    if category_content_widgets then
-        local is_focused_grid = self._selected_navigation_column_index == CATEGORIES_GRID
-        local selected_category_widget = self._selected_category_widget
-    
-        for i = 1, #category_content_widgets do
-            local widget = category_content_widgets[i]
-            local hotspot = widget.content.hotspot
-    
-            if hotspot.is_focused then
-                hotspot.is_selected = true
-        
-                if widget ~= selected_category_widget then
-                    self._selected_category_widget = widget
-                    local entry = widget.content.entry
-        
-                    if entry and entry.select_function then
-                        entry.select_function(self, widget, entry)
-                    end
+    local category_content_widgets = self._entry_content_widgets
+    if not category_content_widgets then
+        return
+    end
+
+    local is_focused_grid = self._selected_navigation_column_index == CATEGORIES_GRID
+    local selected_category_widget = self._selected_category_widget
+
+    -- Process each widget in the category grid
+    for i = 1, #category_content_widgets do
+        local widget = category_content_widgets[i]
+        local hotspot = widget.content.hotspot
+
+        if hotspot.is_focused then
+            -- Mark focused widget as selected
+            hotspot.is_selected = true
+
+            -- If this is a new selection, call the select function
+            if widget ~= selected_category_widget then
+                self._selected_category_widget = widget
+                local entry = widget.content.entry
+
+                if entry and entry.select_function then
+                    entry.select_function(self, widget, entry)
                 end
-            elseif is_focused_grid then
-                hotspot.is_selected = false
             end
+        elseif is_focused_grid then
+            -- Clear selection for non-focused widgets when grid is focused
+            hotspot.is_selected = false
         end
     end
 end
 
+-- Handle keybind rebinding process
 UptimeHistoryView._handle_keybind_rebind = function(self, dt, t, input_service)
-    if self._handling_keybind then
-        local input_manager = Managers.input
-        local results = input_manager:key_watch_result()
-    
-        if results then
-            local entry = self._active_keybind_entry
-            local widget = self._active_keybind_widget
-            local presentation_string = InputUtils.localized_string_from_key_info(results)
-            local service_type = entry.service_type
-            local alias_name = entry.alias_name
-            local value = entry.value
-            local can_close = entry.on_activated(results, value)
-    
-            if can_close then
-                self:close_keybind_popup()
-            else
-                Managers.input:stop_key_watch()
-        
-                local devices = entry.devices
-        
-                Managers.input:start_key_watch(devices)
-            end
+    -- Only process if we're currently handling a keybind
+    if not self._handling_keybind then
+        return
+    end
+
+    -- Check for key watch results
+    local input_manager = Managers.input
+    local results = input_manager:key_watch_result()
+
+    if results then
+        local entry = self._active_keybind_entry
+        local widget = self._active_keybind_widget
+
+        -- Get localized string representation of the key
+        local presentation_string = InputUtils.localized_string_from_key_info(results)
+
+        -- Get entry information
+        local service_type = entry.service_type
+        local alias_name = entry.alias_name
+        local value = entry.value
+
+        -- Activate the keybind and check if we can close
+        local can_close = entry.on_activated(results, value)
+
+        if can_close then
+            -- Close the popup if activation was successful
+            self:close_keybind_popup()
+        else
+            -- Restart key watch with the entry's devices
+            Managers.input:stop_key_watch()
+            Managers.input:start_key_watch(entry.devices)
         end
     end
 end
 
+-- Check if we're currently handling a keybinding
 UptimeHistoryView._handling_keybinding = function(self)
+    -- We're handling a keybind if either actively binding or in the closing animation
     return self._handling_keybind or self._close_keybind_popup_duration ~= nil
 end
 
+-- Close the keybind popup
 UptimeHistoryView.close_keybind_popup = function(self, force_close)
     if force_close then
+        -- Immediately close the popup
         Managers.input:stop_key_watch()
-    
+
+        -- Remove the popup element
         local reference_name = "keybind_popup"
         self._keybind_popup = nil
-    
         self:_remove_element(reference_name)
+
+        -- Allow the view to be exited
         self:set_can_exit(true, true)
     else
+        -- Start the closing animation
         self._close_keybind_popup_duration = 0.2
     end
-  
+
+    -- Reset keybind state
     self._handling_keybind = false
     self._active_keybind_entry = nil
     self._active_keybind_widget = nil
 end
 
+-- Set the position of a scenegraph node
 UptimeHistoryView._set_scenegraph_position = function(self, scenegraph_id, position)
     local ui_scenegraph = self._ui_scenegraph
     local scenegraph_node = ui_scenegraph[scenegraph_id]
-    
+
+    -- Only update if the node exists
     if scenegraph_node then
         scenegraph_node.position[1] = position[1]
         scenegraph_node.position[2] = position[2]
     end
 end
 
+-- Set the size of a scenegraph node
 UptimeHistoryView._set_scenegraph_size = function(self, scenegraph_id, size)
     local ui_scenegraph = self._ui_scenegraph
     local scenegraph_node = ui_scenegraph[scenegraph_id]
-    
+
+    -- Only update if the node exists
     if scenegraph_node then
         scenegraph_node.size[1] = size[1]
         scenegraph_node.size[2] = size[2]
     end
 end
 
+-- Set tooltip data for a widget
 UptimeHistoryView._set_tooltip_data = function(self, widget)
     local tooltip_widget = self._widgets_by_name.tooltip
-    local tooltip_text = ""
     local entry = widget.content.entry
-    
-    if entry then
-        if entry.tooltip_text then
-            tooltip_text = Managers.localization:localize(entry.tooltip_text)
-        elseif entry.disabled_by and not table.is_empty(entry.disabled_by) then
-            tooltip_text = "Disabled by: "
-            
-            for i, disabled_by in ipairs(entry.disabled_by) do
-                if i > 1 then
-                    tooltip_text = tooltip_text .. ", "
-                end
-                
-                tooltip_text = tooltip_text .. Managers.localization:localize(disabled_by)
-            end
-        end
+
+    -- Get tooltip text based on entry properties
+    local tooltip_text = self:_get_tooltip_text(entry)
+
+    -- Only proceed if we have tooltip text
+    if tooltip_text == "" then
+        return
     end
-    
-    if tooltip_text ~= "" then
-        local content = tooltip_widget.content
-        content.text = tooltip_text
-        
-        local style = tooltip_widget.style
-        local ui_renderer = self._ui_renderer
-        local text_style = style.text
-        
-        UIRenderer.begin_pass(ui_renderer, self._ui_scenegraph, nil, 0, nil)
-        
-        local min, max = UIRenderer.text_size(ui_renderer, content.text, text_style.font_type, text_style.font_size)
-        local text_width = max[1] - min[1]
-        local text_height = max[3] - min[3]
-        
-        UIRenderer.end_pass(ui_renderer)
-        
-        local size = {
-            text_width + 40,
-            text_height + 40
-        }
-        local position = {
-            widget.offset[1] + widget.content.hotspot.anim_hover_progress * 10,
-            widget.offset[2]
-        }
-        
-        self:_set_scenegraph_position("tooltip", position)
-        self:_set_scenegraph_size("tooltip", size)
-        
-        tooltip_widget.content.visible = true
-        self._tooltip_data = {
-            widget = widget
-        }
-    end
+
+    -- Set tooltip text
+    local content = tooltip_widget.content
+    content.text = tooltip_text
+
+    -- Calculate tooltip size based on text dimensions
+    local size = self:_calculate_tooltip_size(tooltip_text)
+
+    -- Calculate tooltip position
+    local position = {
+        widget.offset[1] + widget.content.hotspot.anim_hover_progress * 10,
+        widget.offset[2]
+    }
+
+    -- Update tooltip position and size
+    self:_set_scenegraph_position("tooltip", position)
+    self:_set_scenegraph_size("tooltip", size)
+
+    -- Show tooltip
+    tooltip_widget.content.visible = true
+    self._tooltip_data = {
+        widget = widget
+    }
 end
 
--- ##### ██████╗ ██████╗  █████╗ ██╗    ██╗ ###########################################################################
--- ##### ██╔══██╗██╔══██╗██╔══██╗██║    ██║ ###########################################################################
--- ##### ██║  ██║██████╔╝███████║██║ █╗ ██║ ###########################################################################
--- ##### ██║  ██║██╔══██╗██╔══██║██║███╗██║ ###########################################################################
--- ##### ██████╔╝██║  ██║██║  ██║╚███╔███╔╝ ###########################################################################
--- ##### ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝  ###########################################################################
+-- Get tooltip text based on entry properties
+UptimeHistoryView._get_tooltip_text = function(self, entry)
+    if not entry then
+        return ""
+    end
 
+    -- Use tooltip text if available
+    if entry.tooltip_text then
+        return Managers.localization:localize(entry.tooltip_text)
+    end
+
+    -- Show disabled by information if available
+    if entry.disabled_by and not table.is_empty(entry.disabled_by) then
+        local tooltip_text = "Disabled by: "
+
+        for i, disabled_by in ipairs(entry.disabled_by) do
+            if i > 1 then
+                tooltip_text = tooltip_text .. ", "
+            end
+
+            tooltip_text = tooltip_text .. Managers.localization:localize(disabled_by)
+        end
+
+        return tooltip_text
+    end
+
+    return ""
+end
+
+-- Calculate tooltip size based on text dimensions
+UptimeHistoryView._calculate_tooltip_size = function(self, tooltip_text)
+    local tooltip_widget = self._widgets_by_name.tooltip
+    local style = tooltip_widget.style
+    local ui_renderer = self._ui_renderer
+    local text_style = style.text
+
+    -- Measure text size
+    UIRenderer.begin_pass(ui_renderer, self._ui_scenegraph, nil, 0, nil)
+    local min, max = UIRenderer.text_size(ui_renderer, tooltip_text, text_style.font_type, text_style.font_size)
+    UIRenderer.end_pass(ui_renderer)
+
+    -- Calculate dimensions with padding
+    local text_width = max[1] - min[1]
+    local text_height = max[3] - min[3]
+
+    return {
+        text_width + 40,
+        text_height + 40
+    }
+end
+
+-- Main draw function for the view
 UptimeHistoryView.draw = function(self, dt, t, input_service, layer)
+    -- Draw main UI elements
     self:_draw_elements(dt, t, self._ui_renderer, self._render_settings, input_service)
-    local ui_renderer = self._ui_offscreen_renderer
+
+    -- Draw grid content
     local widgets_by_name = self._widgets_by_name
     local grid_interaction_widget = widgets_by_name.grid_interaction
-    self:_draw_grid(self._category_content_grid, self._category_content_widgets, grid_interaction_widget, dt, t, input_service)
+    self:_draw_grid(
+            self._entries_content_grid,
+            self._entry_content_widgets,
+            grid_interaction_widget,
+            dt,
+            t,
+            input_service
+    )
+
+    -- Call parent draw method
     UptimeHistoryView.super.draw(self, dt, t, input_service, layer)
 end
 
+-- Draw UI elements
 UptimeHistoryView._draw_elements = function(self, dt, t, ui_renderer, render_settings, input_service)
+    -- Just call parent method as we don't need to add anything
     UptimeHistoryView.super._draw_elements(self, dt, t, ui_renderer, render_settings, input_service)
 end
 
-UptimeHistoryView._draw_grid = function (self, grid, widgets, interaction_widget, dt, t, input_service)
+-- Draw grid widgets with proper interaction handling
+UptimeHistoryView._draw_grid = function(self, grid, widgets, interaction_widget, dt, t, input_service)
+    -- Determine if grid is hovered (either using cursor or via interaction widget)
     local is_grid_hovered = not self._using_cursor_navigation or interaction_widget.content.hotspot.is_hover or false
+
+    -- Create null input service for non-interactive elements
     local null_input_service = input_service:null_service()
+
+    -- Get rendering resources
     local render_settings = self._render_settings
     local ui_renderer = self._ui_offscreen_renderer
     local ui_scenegraph = self._ui_scenegraph
 
+    -- Begin rendering pass
     UIRenderer.begin_pass(ui_renderer, ui_scenegraph, input_service, dt, render_settings)
 
+    -- Draw each widget in the grid
     for j = 1, #widgets do
         local widget = widgets[j]
-        local draw = widget ~= self._selected_settings_widget
 
-        if draw then
+        -- Skip selected settings widget
+        if widget ~= self._selected_settings_widget then
+            -- Use null input service if we have a selected settings widget
             if self._selected_settings_widget then
                 ui_renderer.input_service = null_input_service
             end
 
+            -- Only draw visible widgets
             if grid:is_widget_visible(widget) then
                 local hotspot = widget.content.hotspot
 
                 if hotspot then
+                    -- Disable hotspot if grid is not hovered
                     hotspot.force_disabled = not is_grid_hovered
+
+                    -- Check if widget is active (focused or hovered)
                     local is_active = hotspot.is_focused or hotspot.is_hover
 
-                    if is_active and widget.content.entry and (widget.content.entry.tooltip_text or widget.content.entry.disabled_by and not table.is_empty(widget.content.entry.disabled_by)) then
+                    -- Show tooltip for active widgets with tooltip data
+                    if is_active and widget.content.entry and
+                            (widget.content.entry.tooltip_text or
+                                    (widget.content.entry.disabled_by and not table.is_empty(widget.content.entry.disabled_by))) then
                         self:_set_tooltip_data(widget)
                     end
                 end
 
+                -- Draw the widget
                 UIWidget.draw(widget, ui_renderer)
             end
         end
     end
 
+    -- End rendering pass
     UIRenderer.end_pass(ui_renderer)
 end
 
