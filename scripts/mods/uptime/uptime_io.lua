@@ -302,7 +302,7 @@ mod.test_load_functionality = function(self)
     local buff_count = 0
     for buff_name, buff_data in pairs(most_recent.buffs) do
         buff_count = buff_count + 1
-        local text = string.format("%.1f%%", buff_data.uptime_percent)
+        local text = string.format("%.1f%s", buff_data.uptime_percent, "%%")
         mod:echo(text)
 
         mod:echo(string.format("[Uptime] Buff: %s - %.1f%s uptime, %.2f avg stacks",
