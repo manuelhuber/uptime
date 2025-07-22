@@ -41,7 +41,7 @@ end
 UptimeHistoryView.on_enter = function(self)
     UptimeHistoryView.super.on_enter(self)
 
-    self._default_category = nil
+    self._default_entry = nil
     self._using_cursor_navigation = Managers.ui:using_cursor_navigation()
 
     self:_setup_category_config()
@@ -115,20 +115,20 @@ UptimeHistoryView._setup_category_config = function(self, scan_dir)
     end
 
     -- Get all uptime history entries
-    local config_categories = mod:get_history_entries(scan_dir)
+    local history_entries = mod:get_history_entries(scan_dir)
     local entries = {}
     local entries_by_title = {}
 
     -- Process each history entry
-    for i = 1, #config_categories do
-        local category_config = config_categories[i]
-        local entry = self:_create_category_entry(category_config)
+    for i = 1, #history_entries do
+        local history_entry = history_entries[i]
+        local entry = self:_create_category_entry(history_entry)
         entries[#entries + 1] = entry
         entries_by_title[entry.title] = entry
     end
 
     -- Set default category if available
-    self._default_category = config_categories[1] and config_categories[1].date or nil
+    self._default_entry = history_entries[1] and history_entries[1].date or nil
 
     -- Set up the grid and widgets
     local scenegraph_id = "grid_content_pivot"
@@ -279,9 +279,9 @@ UptimeHistoryView._update_grid_navigation_selection = function(self)
         elseif navigation_widgets or self._settings_content_widgets then
             -- Set default widget if none selected
             self:_set_default_navigation_widget()
-        elseif self._default_category then
+        elseif self._default_entry then
             -- Present default category if available
-            self:present_category_widgets(self._default_category)
+            self:present_category_widgets(self._default_entry)
         end
     end
 end
