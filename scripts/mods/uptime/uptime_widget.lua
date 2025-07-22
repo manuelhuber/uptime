@@ -80,6 +80,7 @@ end
 UptimeWidget.update_content = function(self)
     local start_time = mod:start_time()
     if (start_time == nil) then
+        self:cleanup()
         return
     end
     local buffs = mod:active_buffs()
@@ -116,6 +117,13 @@ UptimeWidget._draw_widgets = function(self, dt, t, input_service, ui_renderer)
         UIWidget.draw(widget, ui_renderer)
     end
     UptimeWidget.super._draw_widgets(self, dt, t, input_service, ui_renderer)
+end
+
+UptimeWidget.cleanup = function(self)
+    for name, widget in pairs(self._widgets_by_name) do
+        self:_unregister_widget_name(widget.name)
+    end
+    self._widgets_by_name = {}
 end
 
 return UptimeWidget
