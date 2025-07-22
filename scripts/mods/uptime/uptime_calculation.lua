@@ -31,25 +31,25 @@ local function calculate_current_values(buff_data)
     local now = Managers.time:time("gameplay")
     local current_uptime = buff_data.total_uptime or 0
     local current_stack_time_product = buff_data.stack_time_product or 0
-    
+
     -- If buff is active, add current session to uptime
     if buff_data.start_time then
         current_uptime = current_uptime + (now - buff_data.start_time)
-        
+
         -- Update stack_time_product for current session
         if buff_data.last_stack_change_time then
             local duration = now - buff_data.last_stack_change_time
-            current_stack_time_product = current_stack_time_product + 
-                (buff_data.current_stack_count * duration)
+            current_stack_time_product = current_stack_time_product +
+                    (buff_data.current_stack_count * duration)
         end
     end
-    
+
     -- Calculate average stack count
     local avg_stacks = 0
     if current_uptime > 0 then
         avg_stacks = current_stack_time_product / current_uptime
     end
-    
+
     return current_uptime, avg_stacks
 end
 
@@ -57,11 +57,11 @@ end
 mod.active_buffs = function()
     local now = Managers.time:time("gameplay")
     local result = {}
-    
+
     -- Create a copy with real-time values
     for buff_name, buff_data in pairs(buffs) do
         result[buff_name] = table.clone(buff_data)
-        
+
         -- Calculate real-time values for active buffs
         if buff_data.start_time then
             local current_uptime, avg_stacks = calculate_current_values(buff_data)
@@ -69,11 +69,11 @@ mod.active_buffs = function()
             result[buff_name].current_avg_stacks = avg_stacks
         else
             result[buff_name].current_uptime = buff_data.total_uptime or 0
-            result[buff_name].current_avg_stacks = (buff_data.total_uptime and buff_data.total_uptime > 0) 
-                and (buff_data.stack_time_product / buff_data.total_uptime) or 0
+            result[buff_name].current_avg_stacks = (buff_data.total_uptime and buff_data.total_uptime > 0)
+                    and (buff_data.stack_time_product / buff_data.total_uptime) or 0
         end
     end
-    
+
     return result
 end
 
@@ -122,21 +122,27 @@ mod.try_end_tracking = function()
     end
     mission_start_time = nil
 end
+
+function track_buff(buff)
+    buffs[buff:title()] = {
+        icon = buff:_hud_icon(),
+        gradient_map = buff:hud_icon_gradient_map(),
+        total_uptime = 0,
+        start_time = nil,
+        -- Stack tracking data
+        current_stack_count = 0,
+        stack_time_product = 0, -- Sum of (stack_count * time_with_that_stack)
+        last_stack_change_time = nil
+    }
+end
+
 mod:hook_safe("PlayerUnitBuffExtension", "_on_add_buff", function(self, buff)
     local buff_title = buff:title()
+    mod:echo(buff_title)
 
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
-        buffs[buff_title] = {
-            icon = buff:_hud_icon(),
-            gradient_map = buff:hud_icon_gradient_map(),
-            total_uptime = 0,
-            start_time = nil,
-            -- Stack tracking data
-            current_stack_count = 0,
-            stack_time_product = 0, -- Sum of (stack_count * time_with_that_stack)
-            last_stack_change_time = nil
-        }
+        track_buff(buff)
     end
 
     -- Set start time if not already set
@@ -156,22 +162,25 @@ end)
 mod:hook_safe("PlayerUnitBuffExtension", "_on_add_buff_stack", function(self, buff, previous_stack_count)
     local buff_title = buff:title()
     local newStackCount = buff:stat_buff_stacking_count()
+    local now = Managers.time:time("gameplay")
 
-    -- Update stack tracking data if we're tracking this buff
-    if buffs[buff_title] and buffs[buff_title].start_time then
-        local now = Managers.time:time("gameplay")
-
-        -- If we have a previous stack change time, calculate contribution to the average
-        if buffs[buff_title].last_stack_change_time then
-            local duration = now - buffs[buff_title].last_stack_change_time
-            buffs[buff_title].stack_time_product = buffs[buff_title].stack_time_product +
-                    (buffs[buff_title].current_stack_count * duration)
-        end
-
-        -- Update current stack count and timestamp
-        buffs[buff_title].current_stack_count = newStackCount
-        buffs[buff_title].last_stack_change_time = now
+    if not buffs[buff_title] then
+        track_buff(buff)
+        buffs[buff_title].start_time = now
     end
+    -- Update stack tracking data if we're tracking this buff
+    local now = Managers.time:time("gameplay")
+
+    -- If we have a previous stack change time, calculate contribution to the average
+    if buffs[buff_title].last_stack_change_time then
+        local duration = now - buffs[buff_title].last_stack_change_time
+        buffs[buff_title].stack_time_product = buffs[buff_title].stack_time_product +
+                (buffs[buff_title].current_stack_count * duration)
+    end
+
+    -- Update current stack count and timestamp
+    buffs[buff_title].current_stack_count = newStackCount
+    buffs[buff_title].last_stack_change_time = now
 end)
 
 mod:hook_safe("PlayerUnitBuffExtension", "_on_remove_buff_stack", function(self, buff, previous_stack_count)
