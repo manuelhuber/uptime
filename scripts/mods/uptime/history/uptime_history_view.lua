@@ -13,13 +13,6 @@ local TextUtilities = mod:original_require("scripts/utilities/ui/text")
 local CATEGORIES_GRID = 1
 local UptimeHistoryView = class("UptimeHistoryView", "BaseView")
 
--- ##### ██╗███╗   ██╗██╗████████╗ ####################################################################################
--- ##### ██║████╗  ██║██║╚══██╔══╝ ####################################################################################
--- ##### ██║██╔██╗ ██║██║   ██║    ####################################################################################
--- ##### ██║██║╚██╗██║██║   ██║    ####################################################################################
--- ##### ██║██║ ╚████║██║   ██║    ####################################################################################
--- ##### ╚═╝╚═╝  ╚═══╝╚═╝   ╚═╝    ####################################################################################
-
 UptimeHistoryView.init = function(self, settings)
     self._definitions = mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history_view_definitions")
     self._blueprints = mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history_view_blueprints")
@@ -47,12 +40,6 @@ UptimeHistoryView._setup_offscreen_gui = function(self)
     self._ui_offscreen_renderer = ui_manager:create_renderer(class_name .. "_ui_offscreen_renderer", self._offscreen_world)
 end
 
--- ##### ███████╗███╗   ██╗████████╗███████╗██████╗  ##################################################################
--- ##### ██╔════╝████╗  ██║╚══██╔══╝██╔════╝██╔══██╗ ##################################################################
--- ##### █████╗  ██╔██╗ ██║   ██║   █████╗  ██████╔╝ ##################################################################
--- ##### ██╔══╝  ██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗ ##################################################################
--- ##### ███████╗██║ ╚████║   ██║   ███████╗██║  ██║ ##################################################################
--- ##### ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝ ##################################################################
 
 UptimeHistoryView.on_enter = function(self)
     UptimeHistoryView.super.on_enter(self)
@@ -104,15 +91,14 @@ UptimeHistoryView.present_category_widgets = function(self, category)
     end
 end
 
--- ##### ┌─┐┬─┐┬┌┬┐ #################################################################################################
--- ##### │ ┬├┬┘│ ││ #################################################################################################
--- ##### └─┘┴└─┴─┴┘ #################################################################################################
 
+-- Set up scrollbar for content grid with optional scrolling speed from DMF settings
 UptimeHistoryView._setup_content_grid_scrollbar = function(self, grid, widget_id, grid_scenegraph_id, grid_pivot_scenegraph_id)
     local widgets_by_name = self._widgets_by_name
     local scrollbar_widget = widgets_by_name[widget_id]
   
-    if DMF:get("dmf_options_scrolling_speed") and widgets_by_name and widgets_by_name["scrollbar"] then
+    -- Apply DMF scrolling speed setting if available
+    if DMF:get("dmf_options_scrolling_speed") and widgets_by_name["scrollbar"] then
         widgets_by_name["scrollbar"].content.scroll_speed = DMF:get("dmf_options_scrolling_speed")
     end
   
@@ -120,6 +106,7 @@ UptimeHistoryView._setup_content_grid_scrollbar = function(self, grid, widget_id
     grid:set_scrollbar_progress(0)
 end
 
+-- Set up the category configuration for the history view
 UptimeHistoryView._setup_category_config = function(self, scan_dir)
     if self._category_content_widgets then
         for i = 1, #self._category_content_widgets do

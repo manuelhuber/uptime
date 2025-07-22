@@ -1,32 +1,47 @@
+--[[
+  Uptime History View Definitions
+  
+  This file defines the UI layout and widget definitions for the uptime history view,
+  including scenegraph nodes, widget styles, and input legend.
+--]]
+
 local mod = get_mod("uptime")
 
+-- ===== Required Dependencies =====
 local UISoundEvents = mod:original_require("scripts/settings/ui/ui_sound_events")
 local ScrollbarPassTemplates = mod:original_require("scripts/ui/pass_templates/scrollbar_pass_templates")
 local UIWorkspaceSettings = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 local UIFontSettings = mod:original_require("scripts/managers/ui/ui_font_settings")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
+-- Load view settings
 local _view_settings = mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history_view_settings")
 
+-- ===== Size and Layout Settings =====
+-- Scrollbar dimensions
 local scrollbar_width = _view_settings.scrollbar_width
 
+-- Grid dimensions
 local grid_size = _view_settings.grid_size
 local grid_width = grid_size[1]
 local grid_height = grid_size[2]
 local grid_blur_edge_size = _view_settings.grid_blur_edge_size
 
+-- Mask dimensions (for content scrolling)
 local mask_size = {
     grid_width + grid_blur_edge_size[1] * 2,
     grid_height + grid_blur_edge_size[2] * 2
 }
 local mask_offset_y = 16
 local settings_mask_size = {
-  1080 + grid_blur_edge_size[1] * 2,
-  grid_height + grid_blur_edge_size[2]
+    1080 + grid_blur_edge_size[1] * 2,
+    grid_height + grid_blur_edge_size[2]
 }
 
 local settings_grid_height = grid_height + mask_offset_y
 
+-- ===== Style Definitions =====
+-- Tooltip text style
 local tooltip_text_style = table.clone(UIFontSettings.body)
 tooltip_text_style.text_horizontal_alignment = "left"
 tooltip_text_style.text_vertical_alignment = "center"
@@ -35,8 +50,13 @@ tooltip_text_style.vertical_alignment = "center"
 tooltip_text_style.color = Color.white(255, true)
 tooltip_text_style.offset = {0, 0, 2}
 
+-- ===== Scenegraph Definition =====
+-- Defines the layout and positioning of UI elements
 local scenegraph_definition = {
+    -- Root screen element
     screen = UIWorkspaceSettings.screen,
+    
+    -- Tooltip container
     tooltip = {
         vertical_alignment = "top",
         parent = "screen",
@@ -44,6 +64,8 @@ local scenegraph_definition = {
         size = {0, 0},
         position = {0, 0, 200}
     },
+    
+    -- Main background
     background = {
         vertical_alignment = "top",
         parent = "screen",
@@ -51,6 +73,8 @@ local scenegraph_definition = {
         size = {grid_width, grid_height},
         position = {180, 240, 1}
     },
+    
+    -- Background icon
     background_icon = {
         vertical_alignment = "center",
         parent = "screen",
@@ -58,6 +82,8 @@ local scenegraph_definition = {
         size = {1250, 1250},
         position = {0, 0, 0}
     },
+    
+    -- Grid starting point
     grid_start = {
         vertical_alignment = "top",
         parent = "background",
@@ -65,6 +91,8 @@ local scenegraph_definition = {
         size = {0, 0},
         position = {0, 0, 0}
     },
+    
+    -- Grid content pivot (for scrolling)
     grid_content_pivot = {
         vertical_alignment = "top",
         parent = "grid_start",
@@ -72,6 +100,8 @@ local scenegraph_definition = {
         size = {0, 0},
         position = {0, 0, 1}
     },
+    
+    -- Grid mask (for content clipping)
     grid_mask = {
         vertical_alignment = "center",
         parent = "background",
@@ -79,6 +109,8 @@ local scenegraph_definition = {
         size = mask_size,
         position = {0, 0, 0}
     },
+    
+    -- Grid interaction area
     grid_interaction = {
         vertical_alignment = "top",
         parent = "background",
@@ -86,6 +118,8 @@ local scenegraph_definition = {
         size = {grid_width + scrollbar_width * 2, mask_size[2]},
         position = {0, 0, 0}
     },
+    
+    -- Scrollbar
     scrollbar = {
         vertical_alignment = "center",
         parent = "background",
@@ -93,6 +127,8 @@ local scenegraph_definition = {
         size = {scrollbar_width, grid_height},
         position = {50, 0, 1}
     },
+    
+    -- Button template
     button = {
         vertical_alignment = "left",
         parent = "grid_content_pivot",
@@ -100,6 +136,8 @@ local scenegraph_definition = {
         size = {500, 64},
         position = {0, 0, 0}
     },
+    
+    -- Title divider
     title_divider = {
         vertical_alignment = "top",
         parent = "screen",
@@ -107,6 +145,8 @@ local scenegraph_definition = {
         size = {335, 18},
         position = {180, 145, 1}
     },
+    
+    -- Title text
     title_text = {
         vertical_alignment = "bottom",
         parent = "title_divider",
@@ -116,7 +156,10 @@ local scenegraph_definition = {
     },
 }
 
+-- ===== Widget Definitions =====
+-- Defines the visual elements and their properties
 local widget_definitions = {
+    -- Settings overlay (darkens the screen)
     settings_overlay = UIWidget.create_definition({
         {
             pass_type = "rect",
@@ -127,6 +170,8 @@ local widget_definitions = {
             }
         }
     }, "screen"),
+    
+    -- Main background
     background = UIWidget.create_definition({
         {
             pass_type = "rect",
@@ -135,12 +180,16 @@ local widget_definitions = {
             }
         }
     }, "screen"),
+    
+    -- Title divider (skull decoration)
     title_divider = UIWidget.create_definition({
         {
             pass_type = "texture",
             value = "content/ui/materials/dividers/skull_rendered_left_01"
         }
     }, "title_divider"),
+    
+    -- Title text
     title_text = UIWidget.create_definition({
         {
             value_id = "text",
@@ -150,6 +199,8 @@ local widget_definitions = {
             style = table.clone(UIFontSettings.header_1)
         }
     }, "title_text"),
+    
+    -- Background icon
     background_icon = UIWidget.create_definition({
         {
             value = "content/ui/vector_textures/symbols/cog_skull_01",
@@ -160,7 +211,10 @@ local widget_definitions = {
             }
         }
     }, "background_icon"),
+    
+    -- Tooltip (appears when hovering over items)
     tooltip = UIWidget.create_definition({
+        -- Outer border
         {
             pass_type = "rect",
             style = {
@@ -171,6 +225,7 @@ local widget_definitions = {
                 size_addition = {23, 23}
             }
         },
+        -- Inner background
         {
             pass_type = "rect",
             style = {
@@ -181,6 +236,7 @@ local widget_definitions = {
                 size_addition = {20, 20}
             }
         },
+        -- Tooltip text
         {
             value_id = "text",
             style_id = "text",
@@ -191,7 +247,11 @@ local widget_definitions = {
     }, "tooltip", {
         visible = false
     }),
+    
+    -- Scrollbar
     scrollbar = UIWidget.create_definition(ScrollbarPassTemplates.default_scrollbar, "scrollbar"),
+    
+    -- Grid mask (for content clipping)
     grid_mask = UIWidget.create_definition({
         {
             value = "content/ui/materials/offscreen_masks/ui_overlay_offscreen_vertical_blur",
@@ -201,6 +261,8 @@ local widget_definitions = {
             }
         }
     }, "grid_mask"),
+    
+    -- Grid interaction area (for mouse input)
     grid_interaction = UIWidget.create_definition({
         {
             pass_type = "hotspot",
@@ -209,19 +271,26 @@ local widget_definitions = {
     }, "grid_interaction"),
 }
 
+-- ===== Input Legend =====
+-- Defines the buttons shown at the bottom of the screen
 local legend_inputs = {
+    -- Back button
     {
         input_action = "back",
         on_pressed_callback = "cb_on_back_pressed",
         display_name = "loc_settings_menu_close_menu",
         alignment = "left_alignment"
     },
+    
+    -- Reload cache button
     {
         input_action = "hotkey_item_sort",
         on_pressed_callback = "cb_reload_cache_pressed",
         display_name = "loc_scoreboard_scan",
         alignment = "left_alignment"
     },
+    
+    -- Delete button
     {
         input_action = "hotkey_character_delete",
         on_pressed_callback = "cb_delete_pressed",
@@ -231,6 +300,7 @@ local legend_inputs = {
     },
 }
 
+-- ===== Final Definitions =====
 local UptimeHistoryViewDefinitions = {
     legend_inputs = legend_inputs,
     widget_definitions = widget_definitions,

@@ -1,25 +1,44 @@
+--[[
+  Uptime Mod - Main File
+  
+  This mod tracks buff uptime during missions and provides a history view to review past data.
+  
+  Features:
+  - Track buff uptime during missions
+  - View detailed statistics for each buff
+  - Browse history of past tracking sessions
+  - Toggle tracking with a simple command
+--]]
+
 local mod = get_mod("uptime")
 
-mod:io_dofile("uptime/scripts/mods/uptime/uptime_calculation")
-mod:io_dofile("uptime/scripts/mods/uptime/uptime_io")
-mod:io_dofile("uptime/scripts/mods/uptime/uptime_ui")
-mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")
+-- ===== Load Required Files =====
+-- Core functionality
+mod:io_dofile("uptime/scripts/mods/uptime/uptime_calculation")  -- Buff tracking calculations
+mod:io_dofile("uptime/scripts/mods/uptime/uptime_io")           -- File I/O operations
+mod:io_dofile("uptime/scripts/mods/uptime/uptime_ui")           -- UI components
+mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")  -- History functionality
 
-mod:command("u", "", function(self)
+-- ===== Register Commands =====
+-- Toggle uptime tracking (start/stop)
+mod:command("u", "Toggle uptime tracking", function(self)
     if (not mod:try_start_tracking()) then
         mod:try_end_tracking()
     end
 end)
 
--- Command to open uptime history
-mod:command("uh", "", function(self)
+-- Open uptime history view
+mod:command("uh", "Open uptime history view", function(self)
     mod:show_uptime_history_view()
 end)
 
+-- ===== Game Hooks =====
+-- Stop tracking when exiting talent builder to prevent false readings
 mod:hook_safe(CLASS.TalentBuilderView, "on_exit", function(func, self, widget)
-    -- When changing talents we suddenly get all buffs at once, so instead we just stop tracking.
+    -- When changing talents we suddenly get all buffs at once, so instead we just stop tracking
     mod:try_end_tracking()
 end)
 
--- Load uptime history view
+-- ===== Initialize Views =====
+-- Register and load the uptime history view
 mod:register_uptime_history_view()
