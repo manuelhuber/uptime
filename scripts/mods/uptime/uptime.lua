@@ -8,3 +8,8 @@ mod:command("u", "", function(self)
         mod:try_end_tracking()
     end
 end)
+
+mod:hook_safe(CLASS.TalentBuilderView, "on_exit", function(func, self, widget)
+    -- When changing talents we suddenly get all buffs at once, so instead we just stop tracking.
+    mod:try_end_tracking()
+end)
