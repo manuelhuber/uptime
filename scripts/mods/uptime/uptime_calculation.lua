@@ -169,6 +169,7 @@ mod.update_buff = function(self, buff_instance, now)
         buffs[buff_title] = {
             icon = buff_instance:_hud_icon(),
             gradient_map = buff_instance:hud_icon_gradient_map(),
+            stackable = (buff_instance:max_stacks() or 0) > 1,
             total_uptime = 0,
             start_time = now,
             current_stack_count = stack_count,

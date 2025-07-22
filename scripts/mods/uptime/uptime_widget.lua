@@ -104,7 +104,7 @@ UptimeWidget.update_content = function(self)
         local uptime_percent = (current_uptime / tracking_duration) * 100
         local current_avg_stacks = buff_data.current_avg_stacks or 0
         local text = string.format("%.1f%%", uptime_percent)
-        if (current_avg_stacks > 1) then
+        if (buff_data.stackable) then
             text = text .. string.format(" (%.2f stacks)", current_avg_stacks)
         end
         self.widgets[text_key(buff_name)].content.text = text
