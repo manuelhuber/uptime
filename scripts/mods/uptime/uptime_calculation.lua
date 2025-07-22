@@ -123,8 +123,10 @@ mod.try_end_tracking = function()
         end
 
         -- Display uptime percentage and average stack count
-        mod:echo(string.format("%s: %.1f uptime, %.2f avg stacks", buff_name, uptime_percent, avg_stacks))
+        mod:echo(string.format("%s: %.1f%s uptime, %.2f avg stacks", buff_name, uptime_percent, "%%", avg_stacks))
     end
+    mod:save_entry(buffs)
+    buffs = {}
     mission_start_time = nil
 end
 
@@ -145,6 +147,7 @@ mod.ignore_buff = function(self, buff_data)
     local buff_instance = buff_data.buff_instance
     local hud_data = buff_instance:get_hud_data()
     local buff_template = buff_instance:template()
+
     local buff_category = buff_template.buff_category
     local wrong_category = not displayed_buff_categories[buff_category]
     local no_stacks = buff_instance:stat_buff_stacking_count() == 0

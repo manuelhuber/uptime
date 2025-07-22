@@ -1,6 +1,7 @@
 local mod = get_mod("uptime")
 
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_calculation")
+mod:io_dofile("uptime/scripts/mods/uptime/uptime_history")
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_ui")
 
 mod:command("u", "", function(self)
