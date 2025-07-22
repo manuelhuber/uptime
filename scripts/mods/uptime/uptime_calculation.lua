@@ -26,8 +26,55 @@ mod.start_time = function(self)
     return mission_start_time
 end
 
+-- Helper function to calculate current uptime and stack average for active buffs
+local function calculate_current_values(buff_data)
+    local now = Managers.time:time("gameplay")
+    local current_uptime = buff_data.total_uptime or 0
+    local current_stack_time_product = buff_data.stack_time_product or 0
+    
+    -- If buff is active, add current session to uptime
+    if buff_data.start_time then
+        current_uptime = current_uptime + (now - buff_data.start_time)
+        
+        -- Update stack_time_product for current session
+        if buff_data.last_stack_change_time then
+            local duration = now - buff_data.last_stack_change_time
+            current_stack_time_product = current_stack_time_product + 
+                (buff_data.current_stack_count * duration)
+        end
+    end
+    
+    -- Calculate average stack count
+    local avg_stacks = 0
+    if current_uptime > 0 then
+        avg_stacks = current_stack_time_product / current_uptime
+    end
+    
+    return current_uptime, avg_stacks
+end
+
+-- Returns the buffs table with real-time values
 mod.active_buffs = function()
-    return buffs
+    local now = Managers.time:time("gameplay")
+    local result = {}
+    
+    -- Create a copy with real-time values
+    for buff_name, buff_data in pairs(buffs) do
+        result[buff_name] = table.clone(buff_data)
+        
+        -- Calculate real-time values for active buffs
+        if buff_data.start_time then
+            local current_uptime, avg_stacks = calculate_current_values(buff_data)
+            result[buff_name].current_uptime = current_uptime
+            result[buff_name].current_avg_stacks = avg_stacks
+        else
+            result[buff_name].current_uptime = buff_data.total_uptime or 0
+            result[buff_name].current_avg_stacks = (buff_data.total_uptime and buff_data.total_uptime > 0) 
+                and (buff_data.stack_time_product / buff_data.total_uptime) or 0
+        end
+    end
+    
+    return result
 end
 
 mod.try_start_tracking = function()

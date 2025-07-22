@@ -32,6 +32,7 @@ function UptimeWidget:init(parent, draw_layer, start_scale)
 end
 
 function UptimeWidget.add_row(self, key)
+    -- Create text widget for uptime percentage
     local text = UIWidget.create_definition({
         {
             value = key,
@@ -47,6 +48,7 @@ function UptimeWidget.add_row(self, key)
             },
         }
     }, "container")
+    -- Create icon widget
     local icon = UIWidget.create_definition({
         {
             pass_type = "texture",
@@ -76,21 +78,26 @@ UptimeWidget.update = function(self, dt, t, ui_renderer, render_settings, input_
     if (start_time ~= nil) then
         local buffs = mod:active_buffs()
 
+        local now = Managers.time:time("gameplay")
+        local tracking_duration = now - start_time
+
         for buff_name, buff_data in pairs(buffs) do
             if (not self.active_buffs[buff_name]) then
                 self.active_buffs[buff_name] = true
                 self:add_row(buff_name)
-                mod:echo("added widget. Now at " .. #self.widgets)
             end
+
+            -- Update icon
             local icon = self.widgets[icon_key(buff_name)]
-            if icon and icon.style and icon.style.icon then
-                icon.style.icon.material_values = icon.style.icon.material_values or {}
-                icon.style.icon.material_values.talent_icon = buff_data.icon
-                icon.style.icon.material_values.gradient_map = buff_data.gradient_map
-                self.widgets[text_key(buff_name)].content.text = buff_name
-            else
-                mod:echo("widget style is null")
-            end
+            icon.style.icon.material_values = icon.style.icon.material_values or {}
+            icon.style.icon.material_values.talent_icon = buff_data.icon
+            icon.style.icon.material_values.gradient_map = buff_data.gradient_map
+
+            -- Update uptime percentage using real-time values
+            local current_uptime = buff_data.current_uptime or 0
+            local uptime_percent = (current_uptime / tracking_duration) * 100
+            local current_avg_stacks = buff_data.current_avg_stacks or 0
+            self.widgets[text_key(buff_name)].content.text = string.format("%.1f%% (%.2f stacks)", uptime_percent, current_avg_stacks)
         end
     end
 end
