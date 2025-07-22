@@ -74,6 +74,10 @@ end
 
 UptimeWidget.update = function(self, dt, t, ui_renderer, render_settings, input_service)
     UptimeWidget.super.update(self, dt, t, ui_renderer, render_settings, input_service)
+    self:update_content()
+end
+
+UptimeWidget.update_content = function(self)
     local start_time = mod:start_time()
     if (start_time ~= nil) then
         local buffs = mod:active_buffs()
