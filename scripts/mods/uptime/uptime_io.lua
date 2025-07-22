@@ -279,6 +279,33 @@ end
 mod.set_history_entries_cache = function(self, entries)
     self:set("uptime_history_entries", entries)
 end
+-- Delete an entry and update the cache
+
+mod.delete_entry = function(self, entry)
+    -- Only proceed if an entry is provided
+    if not entry then
+        return false
+    end
+
+    -- Try to remove the file
+    if _os.remove(entry.file_path) then
+        -- Update the cache to remove the deleted entry
+        local cache = mod:get_history_entries_cache()
+        local new_cache = {}
+
+        for _, cache_entry in pairs(cache) do
+            if cache_entry ~= entry.file then
+                new_cache[#new_cache + 1] = cache_entry
+            end
+        end
+
+        -- Save the updated cache
+        mod:set_history_entries_cache(new_cache)
+        return true
+    end
+
+    return false
+end
 
 mod:command("load", "", function()
     mod:test_load_functionality()

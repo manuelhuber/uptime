@@ -8,7 +8,9 @@ local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local UIWidgetGrid = mod:original_require("scripts/ui/widget_logic/ui_widget_grid")
 local ViewElementInputLegend = mod:original_require("scripts/ui/view_elements/view_element_input_legend/view_element_input_legend")
 
-local CATEGORIES_GRID = 1
+local UptimeHistoryData = mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history_data")
+
+local ENTRIES_GRID = 1
 local UptimeHistoryView = class("UptimeHistoryView", "BaseView")
 
 UptimeHistoryView.init = function(self, settings)
@@ -19,6 +21,7 @@ UptimeHistoryView.init = function(self, settings)
     self._pass_draw = false
     self.ui_manager = Managers.ui
     self:_setup_offscreen_gui()
+    self._data_handler = UptimeHistoryData:new()
 end
 
 UptimeHistoryView._setup_offscreen_gui = function(self)
@@ -44,7 +47,7 @@ UptimeHistoryView.on_enter = function(self)
     self._default_entry = nil
     self._using_cursor_navigation = Managers.ui:using_cursor_navigation()
 
-    self:_setup_category_config()
+    self:_setup_entries_config()
     self:_setup_input_legend()
     self:_enable_settings_overlay(false)
     self:_update_grid_navigation_selection()
@@ -72,7 +75,7 @@ UptimeHistoryView._enable_settings_overlay = function(self, enable)
     settings_overlay_widget.content.visible = enable
 end
 
-UptimeHistoryView.present_category_widgets = function(self, category)
+UptimeHistoryView.present_entry_widgets = function(self, entry_title)
     if self.entry then
         -- Display the uptime data for the selected entry
         mod:echo("[Uptime] Selected entry: " .. self.entry.mission.name .. " (" .. self.entry.mission.formatted_time .. ")")
@@ -88,7 +91,6 @@ UptimeHistoryView.present_category_widgets = function(self, category)
     end
 end
 
-
 -- Set up scrollbar for content grid with optional scrolling speed from DMF settings
 UptimeHistoryView._setup_content_grid_scrollbar = function(self, grid, widget_id, grid_scenegraph_id, grid_pivot_scenegraph_id)
     local widgets_by_name = self._widgets_by_name
@@ -103,8 +105,8 @@ UptimeHistoryView._setup_content_grid_scrollbar = function(self, grid, widget_id
     grid:set_scrollbar_progress(0)
 end
 
--- Set up the category configuration for the history view
-UptimeHistoryView._setup_category_config = function(self, scan_dir)
+-- Set up the entries configuration for the history view
+UptimeHistoryView._setup_entries_config = function(self, scan_dir)
     -- Clear existing widgets if any
     if self._entry_content_widgets then
         for i = 1, #self._entry_content_widgets do
@@ -114,76 +116,28 @@ UptimeHistoryView._setup_category_config = function(self, scan_dir)
         self._entry_content_widgets = {}
     end
 
-    -- Get all uptime history entries
-    local history_entries = mod:get_history_entries(scan_dir)
-    local entries = {}
-    local entries_by_title = {}
+    -- Get all uptime history entries from the data handler
+    local entries, entries_by_title, default_entry = self._data_handler:get_entries(scan_dir)
 
-    -- Process each history entry
-    for i = 1, #history_entries do
-        local history_entry = history_entries[i]
-        local entry = self:_create_category_entry(history_entry)
-        entries[#entries + 1] = entry
-        entries_by_title[entry.title] = entry
-    end
-
-    -- Set default category if available
-    self._default_entry = history_entries[1] and history_entries[1].date or nil
+    -- Set default entry if available
+    self._default_entry = default_entry
 
     -- Set up the grid and widgets
     local scenegraph_id = "grid_content_pivot"
-    local callback_name = "cb_on_category_pressed"
-    self._entry_content_widgets, self._category_alignment_list = self:_setup_content_widgets(entries, scenegraph_id, callback_name)
+    local callback_name = "cb_on_entry_pressed"
+    self._entry_content_widgets, self._entry_alignment_list = self:_setup_content_widgets(entries, scenegraph_id, callback_name)
 
     -- Configure grid and scrollbar
     local scrollbar_widget_id = "scrollbar"
     local grid_scenegraph_id = "background"
     local grid_pivot_scenegraph_id = "grid_content_pivot"
     local grid_spacing = self._settings.grid_spacing
-    self._entries_content_grid = self:_setup_grid(self._entry_content_widgets, self._category_alignment_list, grid_scenegraph_id, grid_spacing, true)
+    self._entries_content_grid = self:_setup_grid(self._entry_content_widgets, self._entry_alignment_list, grid_scenegraph_id, grid_spacing, true)
     self:_setup_content_grid_scrollbar(self._entries_content_grid, scrollbar_widget_id, grid_scenegraph_id, grid_pivot_scenegraph_id)
 
     -- Set up navigation
     self._navigation_widgets = { self._entry_content_widgets }
     self._navigation_grids = { self._entries_content_grid }
-end
-
--- Create a category entry from config data
-UptimeHistoryView._create_category_entry = function(self, category_config)
-    local mission_name = ""
-    local mission_subname = ""
-
-    -- Add mission info if available
-    if category_config.mission and category_config.mission.name then
-        mission_name = " | " .. category_config.mission.name
-        mission_subname = "\n" .. category_config.mission.formatted_time
-    end
-
-    -- Create localized string for the entry title
-    local date_string = tostring(category_config.date)
-
-    local title = date_string .. mission_name .. mission_subname
-    local subtitle = category_config.mission.player or ""
-    -- Create and return the entry
-    return {
-        widget_type = "settings_button",
-        title = title,
-        subtitle = subtitle,
-        file = category_config.file,
-        file_path = category_config.file_path,
-        pressed_function = function(parent, widget, entry)
-            self._entries_content_grid:select_widget(widget)
-            self:present_category_widgets(title)
-
-            local selected_navigation_column = self._selected_navigation_column_index
-            if selected_navigation_column then
-                self:_change_navigation_column(selected_navigation_column + 1)
-            end
-        end,
-        select_function = function(parent, widget, entry)
-            self:present_category_widgets(title)
-        end
-    }
 end
 
 -- Set up a grid with the given widgets and settings
@@ -200,7 +154,6 @@ end
 
 -- Create widgets from content entries and set up their alignment
 UptimeHistoryView._setup_content_widgets = function(self, content, scenegraph_id, callback_name)
-    local definitions = self._definitions
     local widget_definitions = {}
     local widgets = {}
     local alignment_list = {}
@@ -280,8 +233,8 @@ UptimeHistoryView._update_grid_navigation_selection = function(self)
             -- Set default widget if none selected
             self:_set_default_navigation_widget()
         elseif self._default_entry then
-            -- Present default category if available
-            self:present_category_widgets(self._default_entry)
+            -- Present default entry if available
+            self:present_entry_widgets(self._default_entry)
         end
     end
 end
@@ -377,7 +330,7 @@ UptimeHistoryView._set_selected_navigation_widget = function(self, widget)
                 grid_index,
                 nil,
                 nil,
-                column_index == CATEGORIES_GRID
+                column_index == ENTRIES_GRID
         )
     end
 
@@ -456,11 +409,10 @@ UptimeHistoryView.on_exit = function(self)
     UptimeHistoryView.super.on_exit(self)
 end
 
-
--- Callback for when a category is pressed in the history view
-UptimeHistoryView.cb_on_category_pressed = function(self, widget, entry)
+-- Callback for when an entry is pressed in the history view
+UptimeHistoryView.cb_on_entry_pressed = function(self, widget, entry)
     -- Load the uptime history entry from file
-    self.entry = mod:load_entry(widget.file_path)
+    self.entry = self._data_handler:load_entry(widget.file_path)
 
     -- Call the entry's pressed function if it exists
     if entry.pressed_function then
@@ -476,30 +428,10 @@ end
 
 -- Callback for when the delete button is pressed
 UptimeHistoryView.cb_delete_pressed = function(self)
-    -- Only proceed if an entry is selected
-    if not self.entry then
-        return
-    end
-
-    -- Try to remove the file
-    if _os.remove(self.entry.file_path) then
-        -- Update the cache to remove the deleted entry
-        local cache = mod:get_history_entries_cache()
-        local new_cache = {}
-
-        for _, cache_entry in pairs(cache) do
-            if cache_entry ~= self.entry.file then
-                new_cache[#new_cache + 1] = cache_entry
-            end
-        end
-
-        -- Save the updated cache
-        mod:set_history_entries_cache(new_cache)
-
-        -- Notify user and refresh the view
+    if self._data_handler:delete_entry(self.entry) then
         mod:echo("[Uptime] History entry deleted")
         self.entry = nil
-        self:_setup_category_config()
+        self:_setup_entries_config()
     end
 end
 
@@ -507,9 +439,8 @@ end
 UptimeHistoryView.cb_reload_cache_pressed = function(self)
     -- Clear current entry and reload with scan_dir=true to force refresh
     self.entry = nil
-    self:_setup_category_config(true)
+    self:_setup_entries_config(true)
 end
-
 
 -- Main update function for the view
 UptimeHistoryView.update = function(self, dt, t, input_service, view_data)
@@ -550,12 +481,12 @@ UptimeHistoryView.update = function(self, dt, t, input_service, view_data)
     end
 
     -- Update grid with appropriate input service
-    local category_grid_is_focused = self._selected_navigation_column_index == CATEGORIES_GRID
-    local category_grid_input_service = category_grid_is_focused and input_service or input_service:null_service()
-    self._entries_content_grid:update(dt, t, category_grid_input_service)
+    local entry_grid_is_focused = self._selected_navigation_column_index == ENTRIES_GRID
+    local entry_grid_input_service = entry_grid_is_focused and input_service or input_service:null_service()
+    self._entries_content_grid:update(dt, t, entry_grid_input_service)
 
-    -- Update category widgets
-    self:_update_category_content_widgets(dt, t)
+    -- Update entry widgets
+    self:_update_entry_content_widgets(dt, t)
 
     -- Hide tooltip if widget is no longer hovered
     if self._tooltip_data and self._tooltip_data.widget and not self._tooltip_data.widget.content.hotspot.is_hover then
@@ -567,19 +498,19 @@ UptimeHistoryView.update = function(self, dt, t, input_service, view_data)
     return UptimeHistoryView.super.update(self, dt, t, input_service)
 end
 
--- Update the category content widgets (selection, focus, etc.)
-UptimeHistoryView._update_category_content_widgets = function(self, dt, t)
-    local category_content_widgets = self._entry_content_widgets
-    if not category_content_widgets then
+-- Update the entry content widgets (selection, focus, etc.)
+UptimeHistoryView._update_entry_content_widgets = function(self, dt, t)
+    local entry_content_widgets = self._entry_content_widgets
+    if not entry_content_widgets then
         return
     end
 
-    local is_focused_grid = self._selected_navigation_column_index == CATEGORIES_GRID
-    local selected_category_widget = self._selected_category_widget
+    local is_focused_grid = self._selected_navigation_column_index == ENTRIES_GRID
+    local selected_entry_widget = self._selected_entry_widget
 
-    -- Process each widget in the category grid
-    for i = 1, #category_content_widgets do
-        local widget = category_content_widgets[i]
+    -- Process each widget in the entry grid
+    for i = 1, #entry_content_widgets do
+        local widget = entry_content_widgets[i]
         local hotspot = widget.content.hotspot
 
         if hotspot.is_focused then
@@ -587,8 +518,8 @@ UptimeHistoryView._update_category_content_widgets = function(self, dt, t)
             hotspot.is_selected = true
 
             -- If this is a new selection, call the select function
-            if widget ~= selected_category_widget then
-                self._selected_category_widget = widget
+            if widget ~= selected_entry_widget then
+                self._selected_entry_widget = widget
                 local entry = widget.content.entry
 
                 if entry and entry.select_function then
@@ -615,14 +546,6 @@ UptimeHistoryView._handle_keybind_rebind = function(self, dt, t, input_service)
 
     if results then
         local entry = self._active_keybind_entry
-        local widget = self._active_keybind_widget
-
-        -- Get localized string representation of the key
-        local presentation_string = InputUtils.localized_string_from_key_info(results)
-
-        -- Get entry information
-        local service_type = entry.service_type
-        local alias_name = entry.alias_name
         local value = entry.value
 
         -- Activate the keybind and check if we can close
