@@ -124,6 +124,8 @@ UptimeWidget.cleanup = function(self)
         self:_unregister_widget_name(widget.name)
     end
     self._widgets_by_name = {}
+    self.active_buffs = {}
+    self.row_count = 0
 end
 
 return UptimeWidget
