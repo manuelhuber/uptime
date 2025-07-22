@@ -85,8 +85,8 @@ end
 -- ##### Serialization and Deserialization Functions #####
 
 -- Serialize mission data to a string
-local function serialize_mission(mission_name, mission_duration)
-    return "#mission;" .. tostring(mission_name) .. ";" .. tostring(mission_duration) .. "\n"
+local function serialize_mission(mission_name, mission_duration, player)
+    return "#mission;" .. tostring(mission_name) .. ";" .. tostring(mission_duration) .. ";" .. player .. "\n"
 end
 
 -- Serialize buff data to a string
@@ -114,7 +114,8 @@ local function deserialize_mission(line)
     local info = split(line, ";")
     local mission_data = {
         name = info[2] or "Unknown",
-        duration = tonumber(info[3]) or 0
+        duration = tonumber(info[3]) or 0,
+        player = info[4]
     }
 
     -- Format duration as a readable time string
@@ -174,8 +175,8 @@ mod.save_entry = function(self, active_buffs)
     local mission_start_time = self:start_time() or 0
     local mission_duration = Managers.time:time("gameplay") - mission_start_time
     local mission_name = Managers.state.mission and Managers.state.mission:mission_name() or "Unknown"
-
-    file:write(serialize_mission(mission_name, mission_duration))
+    local player = Managers.player:local_player(1)
+    file:write(serialize_mission(mission_name, mission_duration, player:name()))
 
     -- Write buff data
     for buff_name, buff_data in pairs(active_buffs) do
