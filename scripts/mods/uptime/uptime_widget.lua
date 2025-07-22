@@ -79,30 +79,35 @@ end
 
 UptimeWidget.update_content = function(self)
     local start_time = mod:start_time()
-    if (start_time ~= nil) then
-        local buffs = mod:active_buffs()
+    if (start_time == nil) then
+        return
+    end
+    local buffs = mod:active_buffs()
 
-        local now = Managers.time:time("gameplay")
-        local tracking_duration = now - start_time
+    local now = Managers.time:time("gameplay")
+    local tracking_duration = now - start_time
 
-        for buff_name, buff_data in pairs(buffs) do
-            if (not self.active_buffs[buff_name]) then
-                self.active_buffs[buff_name] = true
-                self:add_row(buff_name)
-            end
-
-            -- Update icon
-            local icon = self.widgets[icon_key(buff_name)]
-            icon.style.icon.material_values = icon.style.icon.material_values or {}
-            icon.style.icon.material_values.talent_icon = buff_data.icon
-            icon.style.icon.material_values.gradient_map = buff_data.gradient_map
-
-            -- Update uptime percentage using real-time values
-            local current_uptime = buff_data.current_uptime or 0
-            local uptime_percent = (current_uptime / tracking_duration) * 100
-            local current_avg_stacks = buff_data.current_avg_stacks or 0
-            self.widgets[text_key(buff_name)].content.text = string.format("%.1f%% (%.2f stacks)", uptime_percent, current_avg_stacks)
+    for buff_name, buff_data in pairs(buffs) do
+        if (not self.active_buffs[buff_name]) then
+            self.active_buffs[buff_name] = true
+            self:add_row(buff_name)
         end
+
+        -- Update icon
+        local icon = self.widgets[icon_key(buff_name)]
+        icon.style.icon.material_values = icon.style.icon.material_values or {}
+        icon.style.icon.material_values.talent_icon = buff_data.icon
+        icon.style.icon.material_values.gradient_map = buff_data.gradient_map
+
+        -- Update uptime percentage using real-time values
+        local current_uptime = buff_data.current_uptime or 0
+        local uptime_percent = (current_uptime / tracking_duration) * 100
+        local current_avg_stacks = buff_data.current_avg_stacks or 0
+        local text = string.format("%.1f%%", uptime_percent)
+        if (current_avg_stacks > 1) then
+            text = text .. string.format(" (%.2f stacks)", current_avg_stacks)
+        end
+        self.widgets[text_key(buff_name)].content.text = text
     end
 end
 
