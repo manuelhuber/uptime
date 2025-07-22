@@ -31,6 +31,14 @@ end)
 mod:command("uh", "Open uptime history view", function(self)
     mod:show_uptime_history_view()
 end)
+-- Open uptime history view
+mod:command("uv", "Open uptime history view", function(self)
+    Managers.ui:open_view("uptime_view", nil, false, false, nil, { test = "foo" }, { use_transition_ui = false })
+end)
+mod:command("uc", "close uptime history view", function(self)
+    --Managers.ui:close_view("uptime_view", true)
+    Managers.ui:close_all_views()
+end)
 
 -- ===== Game Hooks =====
 -- Stop tracking when exiting talent builder to prevent false readings
@@ -42,3 +50,4 @@ end)
 -- ===== Initialize Views =====
 -- Register and load the uptime history view
 mod:register_uptime_history_view()
+mod:register_scoreboard_view()
