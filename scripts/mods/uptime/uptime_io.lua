@@ -161,7 +161,7 @@ local function deserialize_buff(line)
 end
 
 -- Save the uptime data to a file
-mod.save_entry = function(self, active_buffs)
+mod.save_entry = function(self, active_buffs, mission_name, mission_duration, player_name)
     -- Create appdata folder
     self:create_uptime_history_directory()
 
@@ -171,12 +171,7 @@ mod.save_entry = function(self, active_buffs)
     -- Open file
     local file = assert(_io.open(path, "w+"))
 
-    -- Write mission info
-    local mission_start_time = self:start_time() or 0
-    local mission_duration = Managers.time:time("gameplay") - mission_start_time
-    local mission_name = Managers.state.mission and Managers.state.mission:mission_name() or "Unknown"
-    local player = Managers.player:local_player(1)
-    file:write(serialize_mission(mission_name, mission_duration, player:name()))
+    file:write(serialize_mission(mission_name, mission_duration, player_name))
 
     -- Write buff data
     for buff_name, buff_data in pairs(active_buffs) do
@@ -272,7 +267,7 @@ end
 
 -- Get cache of history entries
 mod.get_history_entries_cache = function(self)
-    return self:get("uptime_history_entries")
+    return self:get("uptime_history_entries") or {}
 end
 
 -- Set cache of history entries

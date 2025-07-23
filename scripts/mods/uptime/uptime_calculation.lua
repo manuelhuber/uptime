@@ -1,6 +1,7 @@
 local mod = get_mod("uptime")
 local buffs = {}
 local mission_start_time = nil
+local mission_name = ""
 
 local displayed_buff_categories = {
     talents = true,
@@ -82,10 +83,11 @@ mod.active_buffs = function()
     return result
 end
 
-mod.try_start_tracking = function()
+mod.try_start_tracking = function(name)
     if not mission_start_time then
         mission_start_time = Managers.time:time("gameplay")
         buffs = {}  -- Reset buffs table
+        mission_name = name
         mod:echo("[Uptime] Tracking started.")
         return true
     else
@@ -125,22 +127,11 @@ mod.try_end_tracking = function()
         -- Display uptime percentage and average stack count
         mod:echo(string.format("%s: %.1f%s uptime, %.2f avg stacks", buff_name, uptime_percent, "%%", avg_stacks))
     end
-    mod:save_entry(buffs)
+
+    local player = Managers.player:local_player(1):name()
+    mod:save_entry(buffs, mission_name, mission_duration, player)
     buffs = {}
     mission_start_time = nil
-end
-
-function track_buff(buff)
-    buffs[buff:title()] = {
-        icon = buff:_hud_icon(),
-        gradient_map = buff:hud_icon_gradient_map(),
-        total_uptime = 0,
-        start_time = nil,
-        -- Stack tracking data
-        current_stack_count = 0,
-        stack_time_product = 0, -- Sum of (stack_count * time_with_that_stack)
-        last_stack_change_time = nil
-    }
 end
 
 mod.ignore_buff = function(self, buff_data)

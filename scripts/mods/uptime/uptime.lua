@@ -23,7 +23,7 @@ mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")  -- History f
 -- ===== Register Commands =====
 -- Toggle uptime tracking (start/stop)
 mod:command("u", "Toggle uptime tracking", function()
-    if (not mod:try_start_tracking()) then
+    if (not mod:try_start_tracking("test")) then
         mod:try_end_tracking()
     end
 end)
