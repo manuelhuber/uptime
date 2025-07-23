@@ -401,6 +401,8 @@ UptimeHistoryView.on_exit = function(self)
         self._offscreen_world = nil
     end
 
+    mod:close_view()
+
     UptimeHistoryView.super.on_exit(self)
 end
 

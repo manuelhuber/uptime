@@ -1,7 +1,6 @@
 local mod = get_mod("uptime")
 
 local UIWorkspaceSettings = mod:original_require("scripts/settings/ui/ui_workspace_settings")
-local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local background_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/background_definition")
 
 local base_z = 100
