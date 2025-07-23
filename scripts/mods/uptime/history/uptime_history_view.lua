@@ -77,8 +77,6 @@ end
 
 UptimeHistoryView.present_entry_widgets = function(self, entry_title)
     if self.entry then
-        -- Display the uptime data for the selected entry
-        mod:echo("[Uptime] Selected entry: " .. self.entry.mission.name .. " (" .. self.entry.mission.formatted_time .. ")")
         local context = {
             mission = self.entry.mission,
             buffs = self.entry.buffs
