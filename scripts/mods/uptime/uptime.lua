@@ -12,6 +12,7 @@
 
 local mod = get_mod("uptime")
 
+local view_name = "uptime_view"
 -- ===== Load Required Files =====
 -- Core functionality
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_calculation")  -- Buff tracking calculations
@@ -21,24 +22,31 @@ mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")  -- History f
 
 -- ===== Register Commands =====
 -- Toggle uptime tracking (start/stop)
-mod:command("u", "Toggle uptime tracking", function(self)
+mod:command("u", "Toggle uptime tracking", function()
     if (not mod:try_start_tracking()) then
         mod:try_end_tracking()
     end
 end)
 
 -- Open uptime history view
-mod:command("uh", "Open uptime history view", function(self)
+mod:command("uh", "Open uptime history view", function()
     mod:show_uptime_history_view()
 end)
 -- Open uptime history view
-mod:command("uv", "Open uptime history view", function(self)
-    Managers.ui:open_view("uptime_view", nil, false, false, nil, { entries = { "hello", "world" } }, { use_transition_ui = false })
+mod:command("uv", "Open uptime history view", function()
+    mod:close_view()
+    --Managers.ui:open_view(view_name, nil, false, false, nil, { entries = { "hello", "world" } }, { use_transition_ui = false })
 end)
-mod:command("uc", "close uptime history view", function(self)
-    --Managers.ui:close_view("uptime_view", true)
-    Managers.ui:close_all_views()
+
+mod:command("uc", "close uptime history view", function()
+    mod:close_view()
 end)
+
+function mod:close_view()
+    if Managers.ui:view_active(view_name) and not Managers.ui:is_view_closing(view_name) then
+        Managers.ui:close_view(view_name, true)
+    end
+end
 
 -- ===== Game Hooks =====
 -- Stop tracking when exiting talent builder to prevent false readings

@@ -5,7 +5,7 @@ local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local background_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/background_definition")
 
 local base_z = 100
-local size = { 1200, 900 }
+local size = { 1000, 900 }
 local row_scene_graph = "uptime_rows"
 
 local scenegraph_definition = {
@@ -13,7 +13,7 @@ local scenegraph_definition = {
     container = {
         vertical_alignment = "center",
         parent = "screen",
-        horizontal_alignment = "center",
+        horizontal_alignment = "right",
         size = { size[1], size[2] },
         position = { 0, 0, base_z }
     },

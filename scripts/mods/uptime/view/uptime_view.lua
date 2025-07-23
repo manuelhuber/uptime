@@ -1,27 +1,44 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
+local create_row_widget_v1 = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_row_v1")
 
 local UptimeView = class("UptimeView", "BaseView")
 
-local ROW_HEIGHT = 30
-
+local ROW_HEIGHT = 35
+--[[
+v1:
+context: {
+    mission: {
+        name : string
+        duration : number
+        player : string
+        formatted_time : string
+    }
+    buffs: ... (see row v1)
+}
+]]
 function UptimeView:init(settings, context)
     self._definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_definitions")
-    self._entries = context.entries
+    self.buffs = context.buffs
     self._widgets, self._widgets_by_name = {}, {}
     UptimeView.super.init(self, self._definitions, settings)
 end
 
 function UptimeView:on_enter()
-    self:create_rows(self._entries)
+    self:create_rows(self.buffs)
     UptimeView.super.on_enter(self)
 end
 
-function UptimeView:create_rows(entries)
-    for index, entry in pairs(entries) do
-        local row_widget = self:create_row_widget(entry, index)
-        row_widget.offset[2] = -((index - 1) * ROW_HEIGHT)
+function UptimeView:create_rows(buffs)
+    local create_widget = function(...)
+        return self:_create_widget(...)
+    end
+    local index = 0
+    for _, buff in pairs(buffs) do
+        local row_widget = create_row_widget_v1(buff, index, create_widget)
+        row_widget.offset[2] = (index * ROW_HEIGHT)
         self._widgets[#self._widgets + 1] = row_widget
+        index = index + 1
     end
 end
 

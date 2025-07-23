@@ -79,15 +79,12 @@ UptimeHistoryView.present_entry_widgets = function(self, entry_title)
     if self.entry then
         -- Display the uptime data for the selected entry
         mod:echo("[Uptime] Selected entry: " .. self.entry.mission.name .. " (" .. self.entry.mission.formatted_time .. ")")
-
-        -- Display information about the buffs
-        for buff_name, buff_data in pairs(self.entry.buffs) do
-            mod:echo(string.format("[Uptime] Buff: %s - %.1f%s uptime, %.2f avg stacks",
-                    buff_name,
-                    buff_data.uptime_percent,
-                    "%%",
-                    buff_data.avg_stacks))
-        end
+        local context = {
+            mission = self.entry.mission,
+            buffs = self.entry.buffs
+        }
+        mod:close_view()
+        Managers.ui:open_view("uptime_view", nil, false, false, nil, context, { use_transition_ui = false })
     end
 end
 
@@ -413,6 +410,7 @@ end
 UptimeHistoryView.cb_on_entry_pressed = function(self, widget, entry)
     -- Load the uptime history entry from file
     self.entry = self._data_handler:load_entry(widget.file_path)
+    self:present_entry_widgets()
 
     -- Call the entry's pressed function if it exists
     if entry.pressed_function then
