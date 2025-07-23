@@ -58,4 +58,4 @@ end)
 -- ===== Initialize Views =====
 -- Register and load the uptime history view
 mod:register_uptime_history_view()
-mod:register_scoreboard_view()
+mod:register_uptime_view()

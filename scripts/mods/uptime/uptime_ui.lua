@@ -33,7 +33,7 @@ mod:hook("UIHud", "init", function(func, self, elements, visibility_groups, para
     return func(self, elements, visibility_groups, params)
 end)
 
-mod.register_scoreboard_view = function(self)
+mod.register_uptime_view = function(self)
     self:add_require_path("uptime/scripts/mods/uptime/view/uptime_view")
     self:register_view({
         view_name = "uptime_view",
