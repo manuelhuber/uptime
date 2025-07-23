@@ -33,7 +33,7 @@ mod:command("uh", "Open uptime history view", function(self)
 end)
 -- Open uptime history view
 mod:command("uv", "Open uptime history view", function(self)
-    Managers.ui:open_view("uptime_view", nil, false, false, nil, { test = "foo" }, { use_transition_ui = false })
+    Managers.ui:open_view("uptime_view", nil, false, false, nil, { entries = { "hello", "world" } }, { use_transition_ui = false })
 end)
 mod:command("uc", "close uptime history view", function(self)
     --Managers.ui:close_view("uptime_view", true)

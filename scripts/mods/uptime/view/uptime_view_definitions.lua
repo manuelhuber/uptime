@@ -2,106 +2,32 @@ local mod = get_mod("uptime")
 
 local UIWorkspaceSettings = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
-local base_z = 100
+local background_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/background_definition")
 
-local size = { 300, 300 }
+local base_z = 100
+local size = { 1200, 900 }
+local row_scene_graph = "uptime_rows"
 
 local scenegraph_definition = {
     screen = UIWorkspaceSettings.screen,
-    uptime = {
+    container = {
         vertical_alignment = "center",
         parent = "screen",
         horizontal_alignment = "center",
         size = { size[1], size[2] },
         position = { 0, 0, base_z }
     },
-    uptime_rows = {
+    [row_scene_graph] = {
         vertical_alignment = "top",
-        parent = "uptime",
+        parent = "container",
         horizontal_alignment = "center",
         size = { size[1], size[2] - 100 },
-        position = { 0, 40, base_z + 1 }
+        position = { 30, 90, base_z + 1 }
     },
 }
 
 local widget_definitions = {
-    uptime = UIWidget.create_definition({
-        {
-            pass_type = "texture",
-            value = "content/ui/materials/frames/dropshadow_heavy",
-            style = {
-                vertical_alignment = "center",
-                scale_to_material = true,
-                horizontal_alignment = "center",
-                offset = { 0, 0, base_z + 2 },
-                size = { size[1] - 4, size[2] - 3 },
-                color = Color.black(255, true),
-                disabled_color = Color.black(255, true),
-                default_color = Color.black(255, true),
-                hover_color = Color.black(255, true),
-            }
-        },
-        {
-            pass_type = "texture",
-            value = "content/ui/materials/frames/inner_shadow_medium",
-            style = {
-                vertical_alignment = "center",
-                scale_to_material = true,
-                horizontal_alignment = "center",
-                offset = { 0, 0, base_z + 1 },
-                size = { size[1] - 24, size[2] - 28 },
-                color = Color.terminal_grid_background(255, true),
-                disabled_color = Color.terminal_grid_background(255, true),
-                default_color = Color.terminal_grid_background(255, true),
-                hover_color = Color.terminal_grid_background(255, true),
-            }
-        },
-        {
-            value = "content/ui/materials/backgrounds/terminal_basic",
-            pass_type = "texture",
-            style = {
-                vertical_alignment = "center",
-                scale_to_material = true,
-                horizontal_alignment = "center",
-                offset = { 0, 0, base_z },
-                size = { size[1] - 4, size[2] },
-                color = Color.terminal_grid_background(255, true),
-                disabled_color = Color.terminal_grid_background(255, true),
-                default_color = Color.terminal_grid_background(255, true),
-                hover_color = Color.terminal_grid_background(255, true),
-            }
-        },
-        {
-            pass_type = "texture",
-            value = "content/ui/materials/frames/premium_store/details_upper",
-            style = {
-                vertical_alignment = "center",
-                scale_to_material = true,
-                horizontal_alignment = "center",
-                offset = { 0, -size[2] / 2, base_z + 200 },
-                size = { size[1], 80 },
-                color = Color.gray(255, true),
-                disabled_color = Color.gray(255, true),
-                default_color = Color.gray(255, true),
-                hover_color = Color.gray(255, true),
-            }
-        },
-        {
-            pass_type = "texture",
-            value = "content/ui/materials/frames/premium_store/details_lower_basic",
-            style = {
-                vertical_alignment = "center",
-                scale_to_material = true,
-                horizontal_alignment = "center",
-                offset = { 0, size[2] / 2 - 50, base_z + 200 },
-                size = { size[1] + 50, 120 },
-                color = Color.gray(255, true),
-                disabled_color = Color.gray(255, true),
-                default_color = Color.gray(255, true),
-                hover_color = Color.gray(255, true),
-            }
-        },
-    }, "uptime"),
+    background = background_definition(size[1], size[2], base_z),
 }
 
 local legend_inputs = {
@@ -116,7 +42,22 @@ local legend_inputs = {
 local UptimeViewDefinitions = {
     legend_inputs = legend_inputs,
     widget_definitions = widget_definitions,
-    scenegraph_definition = scenegraph_definition
+    scenegraph_definition = scenegraph_definition,
+
+    row_scene_graph = row_scene_graph,
+    row_pass_template = {
+        {
+            value_id = "text",
+            style_id = "text",
+            pass_type = "text",
+            style = {
+                line_spacing = 1.2,
+                font_size = 30,
+                drop_shadow = true,
+                font_type = "machine_medium",
+            },
+        }
+    }
 }
 
 return settings("UptimeViewDefinitions", UptimeViewDefinitions)
