@@ -58,7 +58,7 @@ UptimeHistoryData.load_entry = function(self, file_path)
 end
 
 UptimeHistoryData.delete_entry = function(self, entry)
-    mod:delete_entry(entry)
+    return mod:delete_entry(entry)
 end
 
 return UptimeHistoryData

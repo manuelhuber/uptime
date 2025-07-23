@@ -181,6 +181,10 @@ mod.save_entry = function(self, active_buffs, mission_name, mission_duration, pl
     -- Close file
     file:close()
 
+    local cache = self:get_history_entries_cache()
+    cache[#cache + 1] = file_name
+    self:set_history_entries_cache(cache)
+
     mod:echo("[Uptime] History saved to: " .. file_name)
 end
 
@@ -211,37 +215,38 @@ mod.load_entry = function(self, path)
             entry.buffs[buff_data.name] = buff_data
         end
     end
+    entry.file_path = path
 
     return entry
 end
 
+local function scandir(directory)
+    local i, file_names, popen = 0, {}, _io.popen
+    local pfile = popen('dir "' .. directory .. '" /b')
+    for filename in pfile:lines() do
+        i = i + 1
+        file_names[i] = filename
+    end
+    pfile:close()
+    mod:echo("[Uptime] History entries loaded from directory")
+    mod:echo(file_names[1])
+    return file_names
+end
+
 -- Get all uptime history entries
 mod.get_history_entries = function(self, scan_dir)
-    -- Lua implementation of scandir function
-    local function scandir(directory)
-        local i, t, popen = 0, {}, _io.popen
-        local pfile = popen('dir "' .. directory .. '" /b')
-        for filename in pfile:lines() do
-            i = i + 1
-            t[i] = filename
-        end
-        pfile:close()
-        mod:echo("[Uptime] History entries loaded from directory")
-        return t
-    end
-
     local entries = {}
     local appdata = self:appdata_path()
     local cache = self:get_history_entries_cache()
-    local files = cache
+    local file_names = cache
 
     if scan_dir or not cache then
-        files = scandir(appdata)
-        self:set_history_entries_cache(files)
+        file_names = scandir(appdata)
+        self:set_history_entries_cache(file_names)
     end
 
     local missing_file = false
-    for _, file in pairs(files) do
+    for _, file in pairs(file_names) do
         local file_path = appdata .. file
         if file_exists(file_path) then
             local date_str = string.sub(file, 1, string.len(file) - 4)
@@ -275,10 +280,13 @@ mod.set_history_entries_cache = function(self, entries)
     self:set("uptime_history_entries", entries)
 end
 -- Delete an entry and update the cache
+function ends_with(str, ending)
+    return ending == "" or str:sub(-#ending) == ending
+end
 
 mod.delete_entry = function(self, entry)
     -- Only proceed if an entry is provided
-    if not entry then
+    if not entry or not entry.file_path then
         return false
     end
 
@@ -289,7 +297,8 @@ mod.delete_entry = function(self, entry)
         local new_cache = {}
 
         for _, cache_entry in pairs(cache) do
-            if cache_entry ~= entry.file then
+            local is_deleted_entry = ends_with(entry.file_path, cache_entry)
+            if not is_deleted_entry then
                 new_cache[#new_cache + 1] = cache_entry
             end
         end
