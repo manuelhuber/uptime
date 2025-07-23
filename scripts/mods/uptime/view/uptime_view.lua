@@ -22,6 +22,7 @@ function UptimeView:init(settings, context)
     self.buffs = context.buffs
     self._widgets, self._widgets_by_name = {}, {}
     UptimeView.super.init(self, self._definitions, settings)
+    self._pass_input = true
 end
 
 function UptimeView:on_enter()
