@@ -94,9 +94,6 @@ function update_removed_buffs(tracked_buffs, currently_active_buffs, now)
             
             -- Mark the buff as inactive
             tracked_buffs[buff_title].is_active = false
-            
-            -- Calculate and store total uptime and stack metrics for backward compatibility
-            calculate_metrics_from_events(tracked_buffs[buff_title])
         end
     end
 end
@@ -132,9 +129,6 @@ function update_buff(buffs, buff_instance, now)
             events = {},
             is_active = true,
             current_stack_count = stack_count,
-            -- Keep these for backward compatibility
-            total_uptime = 0,
-            stack_time_product = 0
         }
         
         -- Record an add event
@@ -170,63 +164,6 @@ function update_buff(buffs, buff_instance, now)
     return true
 end
 
--- Calculate metrics from events for backward compatibility
-function calculate_metrics_from_events(buff_data)
-    local events = buff_data.events
-    local total_uptime = 0
-    local stack_time_product = 0
-    
-    -- Process events in pairs (add + remove)
-    local last_add_event = nil
-    local current_stack_count = 0
-    local last_stack_change_time = nil
-    
-    for i, event in ipairs(events) do
-        if event.type == "add" then
-            last_add_event = event
-            current_stack_count = event.stack_count
-            last_stack_change_time = event.time
-        elseif event.type == "remove" and last_add_event then
-            -- Before processing the remove event, handle any stack time since the last stack change
-            if last_stack_change_time and event.time then
-                local stack_duration = event.time - last_stack_change_time
-                stack_time_product = stack_time_product + (current_stack_count * stack_duration)
-            end
-            
-            -- Calculate uptime for this active period
-            if event.time and last_add_event.time then
-                local duration = event.time - last_add_event.time
-                total_uptime = total_uptime + duration
-            end
-            
-            -- Reset for next period
-            last_add_event = nil
-            last_stack_change_time = nil
-        elseif event.type == "stack_change" and last_add_event then
-            -- Calculate stack time product for the period with the previous stack count
-            if event.time and last_stack_change_time then
-                local duration = event.time - last_stack_change_time
-                stack_time_product = stack_time_product + (current_stack_count * duration)
-            end
-            
-            -- Update for next period
-            current_stack_count = event.stack_count
-            last_stack_change_time = event.time
-        end
-    end
-    
-    -- Update the buff data with calculated metrics
-    buff_data.total_uptime = total_uptime
-    buff_data.stack_time_product = stack_time_product
-    
-    -- Calculate average stacks if there was any uptime
-    if total_uptime > 0 then
-        buff_data.avg_stacks = stack_time_product / total_uptime
-    else
-        buff_data.avg_stacks = 0
-    end
-end
-
 function mod:finalize_tracking(tracking_end_time)
     for buff_name, buff_data in pairs(mod.tracked_buffs) do
         -- If the buff is still active at the end of tracking, add a remove event
@@ -238,12 +175,5 @@ function mod:finalize_tracking(tracking_end_time)
             
             buff_data.is_active = false
         end
-        
-        -- Calculate final metrics from all events
-        calculate_metrics_from_events(buff_data)
-        
-        -- For backward compatibility with the original code that had a bug
-        -- The original code used mission_end_time which wasn't defined
-        -- We're using tracking_end_time which is the correct parameter
     end
 end
