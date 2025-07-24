@@ -20,12 +20,17 @@ function mod:try_end_tracking()
         return false
     end
 
-    mod:end_mission_tracking()
-    mod:end_buff_tracking()
+    local mission = mod:end_mission_tracking()
+    local buffs = mod:end_buff_tracking()
 
-    local mission_duration = mod.mission_tracking.end_time - mod.mission_tracking.start_time
     local player = Managers.player:local_player(1):name()
-    mod:save_entry(mod.tracked_buffs, mission_name, mission_duration, player)
+    local entry = {
+        buffs = buffs,
+        mission = mission,
+        mission_name = mission_name,
+        player = player
+    }
+    mod:save_entry(entry)
     mod:echo("[Uptime] Tracking ended.")
     return true
 end
