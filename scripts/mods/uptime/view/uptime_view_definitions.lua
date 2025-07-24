@@ -2,6 +2,7 @@ local mod = get_mod("uptime")
 
 local UIWorkspaceSettings = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 local background_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/background_definition")
+local tooltip_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/tooltip_definition")
 
 local base_z = 100
 local size = { 1000, 900 }
@@ -23,10 +24,12 @@ local scenegraph_definition = {
         size = { size[1], size[2] - 100 },
         position = { 30, 90, base_z + 1 }
     },
+    tooltip = tooltip_definition.scene
 }
 
 local widget_definitions = {
     background = background_definition(size[1], size[2], base_z),
+    tooltip = tooltip_definition.widget_definition
 }
 
 local legend_inputs = {

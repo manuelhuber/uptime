@@ -1,7 +1,6 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
-local psyker_talents = mod:original_require("scripts/settings/ability/archetype_talents/talents/psyker_talents")
 local ROW_HEIGHT = 30
 
 local is_stackable = function(buff)
@@ -62,7 +61,16 @@ local pass_template = {
             --vertical_alignment = "center",
             material_values = {}
         }
-    },
+    }, {
+        content_id = "hotspot",
+        pass_type = "hotspot",
+        style = {
+            offset = { 0, 0, 100 },
+            size = {
+                30, 30
+            }
+        }
+    }
 }
 
 local offset = 35
@@ -101,6 +109,7 @@ end
 
 function create_row_widget_v1(buff, index, _create_widget)
     local widget = _create_widget("row" .. index, row_widget_def)
+    widget.buff = buff
 
     local material = widget.style.buff_icon.material_values or {}
     material.talent_icon = buff.icon

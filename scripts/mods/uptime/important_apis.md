@@ -39,3 +39,5 @@ StateGameplay.on_enter = function (self, parent, params, creation_context)
 ````
 
 [PlayerManager](https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/foundation/managers/player/player_manager.lua#L4)
+
+[Talents](https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/settings/ability/archetype_talents/talents/veteran_talents.lua#L4)
