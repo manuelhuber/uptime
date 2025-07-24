@@ -80,6 +80,7 @@ function generate_display_values_for_buff(mission, buff)
     -- Calculate time at max stack
     local time_at_max_stack = time_per_stack[max_stacks] or 0
     local combat_time_at_max_stack = combat_time_per_stack[max_stacks] or 0
+    local combat_percentage_at_max_stack = combat_time_at_max_stack / uptime_combat * 100
 
     -- Calculate average stacks
     local average_stacks = calculate_average_stacks(time_per_stack, total_uptime, max_stacks)
@@ -92,12 +93,14 @@ function generate_display_values_for_buff(mission, buff)
         uptime_combat_percentage = uptime_combat_percentage,
 
         max_stacks = max_stacks,
+        stackable = buff.stackable,
 
         time_per_stack = time_per_stack,
         combat_time_per_stack = combat_time_per_stack,
 
         time_at_max_stack = time_at_max_stack,
         combat_time_at_max_stack = combat_time_at_max_stack,
+        combat_percentage_at_max_stack = combat_percentage_at_max_stack,
 
         average_stacks = average_stacks,
         average_stacks_combat = average_stacks_combat,

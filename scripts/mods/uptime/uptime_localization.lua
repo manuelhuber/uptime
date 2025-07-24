@@ -4,5 +4,11 @@ return {
     },
     loc_uptime_header = {
         en = "uptime"
+    },
+    loc_avg_stacks_header = {
+        en = "Avg Stacks"
+    },
+    loc_percentage_at_max_stacks_header = {
+        en = "Max stacks"
     }
 }

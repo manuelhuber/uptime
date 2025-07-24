@@ -1,13 +1,35 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
+local ROW_HEIGHT = 30
+
+local is_stackable = function(buff)
+    return buff.stackable
+end
+
 local columns = {
     {
-        id = "uptime",
+        id = "uptime_combat_percentage",
         display_name = "loc_uptime_header",
         width = 75,
         accessor = function(buff)
-            return string.format("%.f%%", buff.uptime)
+            return string.format("%.1f%%", buff.uptime_combat_percentage)
+        end
+    }, {
+        id = "average_stacks_combat",
+        display_name = "loc_avg_stacks_header",
+        width = 75,
+        condition = is_stackable,
+        accessor = function(buff)
+            return string.format("%.2f", buff.average_stacks_combat)
+        end
+    }, {
+        id = "combat_percentage_at_max_stack",
+        display_name = "loc_percentage_at_max_stacks_header",
+        width = 75,
+        condition = is_stackable,
+        accessor = function(buff)
+            return string.format("%.1f%%", buff.combat_percentage_at_max_stack)
         end
     }
 }
@@ -22,23 +44,26 @@ local pass_template = {
                 30,
                 30,
             },
+            --vertical_alignment = "center",
             material_values = {}
         }
     },
 }
 
-local offset = 45
+local offset = 35
 for _, column in pairs(columns) do
     local template = {
         pass_type = "text",
         value_id = column.id,
-        style_id = "text",
+        style_id = column.id,
         style = {
             line_spacing = 1.2,
             font_size = 22,
             drop_shadow = true,
             font_type = "machine_medium",
-            size = { 900, 30 },
+            text_vertical_alignment = "center",
+            text_horizontal_alignment = "right",
+            size = { column.width, ROW_HEIGHT },
             offset = { offset, 0, 0 }
         },
     }
@@ -68,13 +93,18 @@ function create_row_widget_v1(buff, index, _create_widget)
     widget.style.buff_icon.material_values = material
 
     for _, column in pairs(columns) do
-        widget.content[column.id] = column.accessor(buff)
+        local value = ""
+        if not column.condition or column.condition(buff) then
+            value = column.accessor(buff)
+        end
+        widget.content[column.id] = value
     end
 
     return widget
 end
 
 return {
+    row_height = ROW_HEIGHT,
     create_header_row = create_header_row_widget_v1,
     create_row = create_row_widget_v1
 }
