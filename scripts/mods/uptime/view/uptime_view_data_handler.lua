@@ -101,6 +101,9 @@ function generate_display_values_for_buff(mission, buff)
 
         average_stacks = average_stacks,
         average_stacks_combat = average_stacks_combat,
+
+        icon = buff.icon,
+        gradient_map = buff.gradient_map
     }
 end
 
