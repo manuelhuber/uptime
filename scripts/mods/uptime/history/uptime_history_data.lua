@@ -28,20 +28,13 @@ end
 
 -- Create an entry from history data
 UptimeHistoryData.create_entry = function(self, history_entry)
-    local mission_name = ""
-    local mission_subname = ""
-
-    -- Add mission info if available
-    if history_entry.mission and history_entry.mission.name then
-        mission_name = " | " .. history_entry.mission.name
-        mission_subname = "\n" .. history_entry.mission.formatted_time
-    end
+    local mission_name = history_entry.mission_name
 
     -- Create localized string for the entry title
     local date_string = tostring(history_entry.date)
 
-    local title = date_string .. mission_name .. mission_subname
-    local subtitle = history_entry.mission.player or ""
+    local title = date_string .. " | " .. mission_name
+    local subtitle = history_entry.player or ""
 
     -- Create and return the entry
     return {
