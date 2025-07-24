@@ -78,8 +78,7 @@ end
 UptimeHistoryView.present_entry_widgets = function(self, entry_title)
     if self.entry then
         local context = {
-            mission = self.entry.mission,
-            buffs = self.entry.buffs
+            entry = entry
         }
         mod:close_view()
         Managers.ui:open_view("uptime_view", nil, false, false, nil, context, { use_transition_ui = false })
