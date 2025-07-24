@@ -3,7 +3,7 @@ local mod = get_mod("uptime")
 function mod:generate_display_values(entry)
     local mission = entry.mission
     local mission_display_values = generate_display_values_for_mission(mission)
-    local buff_display_values = generate_display_values_for_buffs(entry.buffs)
+    local buff_display_values = generate_display_values_for_buffs(mission, entry.buffs)
     return {
         mission = mission_display_values,
         buffs = buff_display_values
