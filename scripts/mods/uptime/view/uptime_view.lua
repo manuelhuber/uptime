@@ -31,7 +31,7 @@ function UptimeView:create_rows(buffs)
         table.insert(sorted_buffs, buff)
     end
     table.sort(sorted_buffs, function(a, b)
-        return a.uptime_percent > b.uptime_percent
+        return a.uptime > b.uptime
     end)
 
     for _, buff in ipairs(sorted_buffs) do
