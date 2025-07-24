@@ -91,7 +91,7 @@ function update_removed_buffs(tracked_buffs, currently_active_buffs, now)
                 type = "remove",
                 time = now
             })
-            
+
             -- Mark the buff as inactive
             tracked_buffs[buff_title].is_active = false
         end
@@ -118,7 +118,7 @@ end
 function update_buff(buffs, buff_instance, now)
     local buff_title = buff_instance:title()
     local stack_count = buff_instance:stat_buff_stacking_count()
-    
+
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
         buffs[buff_title] = {
@@ -133,25 +133,25 @@ function update_buff(buffs, buff_instance, now)
             related_talents = buff_instance:template().related_talents,
             source_item_id = ((buff_instance._template_context or {}).source_item or {}).__gear_id
         }
-        
+
         -- Record an add event
         table.insert(buffs[buff_title].events, {
             type = "add",
             time = now,
             stack_count = stack_count
         })
-    -- If buff exists but was inactive, mark it as active again
+        -- If buff exists but was inactive, mark it as active again
     elseif not buffs[buff_title].is_active then
         buffs[buff_title].is_active = true
         buffs[buff_title].current_stack_count = stack_count
-        
+
         -- Record an add event
         table.insert(buffs[buff_title].events, {
             type = "add",
             time = now,
             stack_count = stack_count
         })
-    -- If stack count changed, record a stack change event
+        -- If stack count changed, record a stack change event
     elseif buffs[buff_title].current_stack_count ~= stack_count then
         -- Record a stack change event
         table.insert(buffs[buff_title].events, {
@@ -159,11 +159,11 @@ function update_buff(buffs, buff_instance, now)
             time = now,
             stack_count = stack_count
         })
-        
+
         -- Update current stack count
         buffs[buff_title].current_stack_count = stack_count
     end
-    
+
     return true
 end
 
@@ -175,7 +175,7 @@ function mod:finalize_tracking(tracking_end_time)
                 type = "remove",
                 time = tracking_end_time
             })
-            
+
             buff_data.is_active = false
         end
     end

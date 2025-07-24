@@ -1,5 +1,6 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
+local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
 local psyker_talents = mod:original_require("scripts/settings/ability/archetype_talents/talents/psyker_talents")
 local ROW_HEIGHT = 30
 
@@ -38,11 +39,9 @@ local columns = {
         accessor = function(buff)
             if buff.talents then
                 local talent_id = buff.talents[1]
-                if psyker_talents.talents then
-                    return Managers.localization:localize(psyker_talents.talents[talent_id].display_name)
-                else
-                    mod:echo("couldn't load talents")
-
+                local talent = get_talent(talent_id)
+                if talent then
+                    return Managers.localization:localize(talent.display_name)
                 end
             end
             return ""
