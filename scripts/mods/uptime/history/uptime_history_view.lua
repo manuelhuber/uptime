@@ -429,6 +429,7 @@ UptimeHistoryView.cb_delete_pressed = function(self)
     if self._data_handler:delete_entry(self.entry) then
         mod:echo("[Uptime] History entry deleted")
         self.entry = nil
+        mod:close_view()
         self:_setup_entries_config()
     end
 end
