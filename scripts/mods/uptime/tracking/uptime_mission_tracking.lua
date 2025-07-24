@@ -29,6 +29,7 @@ function mod:end_mission_tracking()
             last_combat.end_time = end_time
         end
     end
+    return mod.mission_tracking
 end
 
 function mod:now()

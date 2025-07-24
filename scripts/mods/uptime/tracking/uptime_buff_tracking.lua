@@ -47,6 +47,7 @@ end
 
 function mod:end_buff_tracking()
     mod:finalize_tracking(mod.mission_tracking.end_time)
+    return mod.tracked_buffs
 end
 
 mod:hook_safe("HudElementPlayerBuffs", "_update_buffs", function(self)
