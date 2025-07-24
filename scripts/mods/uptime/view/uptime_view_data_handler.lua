@@ -131,6 +131,7 @@ function calculate_uptime(active_periods)
     for _, period in ipairs(active_periods) do
         total_time = total_time + period.end_time - period.start_time
     end
+    return total_time
 end
 
 -- Calculate uptime percentage based on mission time
