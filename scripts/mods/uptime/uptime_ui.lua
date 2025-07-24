@@ -8,7 +8,7 @@ mod.register_uptime_view = function(self)
             init_view_function = function(ingame_ui_context)
                 return true
             end,
-            class = "UptimeWidget",
+            class = "UptimeView",
             disable_game_world = false,
             display_name = "display name",
             game_world_blur = 0,
