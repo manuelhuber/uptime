@@ -55,6 +55,26 @@ mod:hook_safe(CLASS.TalentBuilderView, "on_exit", function(func, self, widget)
     mod:try_end_tracking()
 end)
 
+mod:hook(CLASS.StateGameplay, "on_enter", function(func, self, parent, params, creation_context, ...)
+    local mission_name = params.mission_name
+    if mission_name ~= "hub_ship" then
+        local tracking_started = mod:try_start_tracking(mission_name)
+        if not tracking_started then
+            mod:echo("[Uptime] FAILED to start tracking: " .. mission_name)
+        end
+    end
+    func(self, parent, params, creation_context, ...)
+end)
+
+mod:hook(CLASS.StateGameplay, "on_exit", function(func, self, exit_params, ...)
+    local ended_tracking = mod:try_end_tracking()
+    if ended_tracking then
+        mod:echo("[Uptime] ended tracking via StateGameplay")
+    end
+
+    func(self, exit_params, ...)
+end)
+
 -- ===== Initialize Views =====
 -- Register and load the uptime history view
 mod:register_uptime_history_view()

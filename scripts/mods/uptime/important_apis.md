@@ -32,3 +32,8 @@ BaseView._draw_widgets = function (self, dt, t, input_service, ui_renderer, rend
 -- draws self._widgets
 end 
 ```
+
+[StateGameplay](https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/game_states/game/state_gameplay.lua#L79)
+````lua
+StateGameplay.on_enter = function (self, parent, params, creation_context)
+````

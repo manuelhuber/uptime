@@ -1,13 +1,11 @@
 local mod = get_mod("uptime")
-local buffs = {}
-local mission_start_time = nil
-local mission_name = ""
+local DMF = get_mod("DMF")
+local _os = DMF:persistent_table("_os")
+_os.initialized = _os.initialized or false
+if not _os.initialized then
+    _os = DMF.deepcopy(Mods.lua.os)
+end
 
-local displayed_buff_categories = {
-    talents = true,
-    weapon_traits = true,
-    talents_secondary = true,
-}
 --[[
     Buff Tracker with Stack Averaging
 
@@ -28,14 +26,35 @@ local displayed_buff_categories = {
     This gives us a time-weighted average that accurately represents how many stacks
     the buff had on average during its active duration.
 ]]
+local buffs = {}
+local mission_start_time = nil
+local mission_name = ""
 
-mod.start_time = function(self)
+local displayed_buff_categories = {
+    talents = true,
+    weapon_traits = true,
+    talents_secondary = true,
+}
+
+function mod:tracking_in_progress()
+    return mission_start_time ~= nil
+end
+
+function mod:now()
+    if not Managers.time:has_timer("gameplay") then
+        mod:echo("need time, but gameplay time doesn't exist")
+        return 0
+    end
+    return Managers.time:time("gameplay")
+end
+
+function mod:start_time()
     return mission_start_time
 end
 
 -- Helper function to calculate current uptime and stack average for active buffs
 local function calculate_current_values(buff_data)
-    local now = Managers.time:time("gameplay")
+    local now = mod:now()
     local current_uptime = buff_data.total_uptime or 0
     local current_stack_time_product = buff_data.stack_time_product or 0
 
@@ -83,23 +102,24 @@ mod.active_buffs = function()
     return result
 end
 
-mod.try_start_tracking = function(name)
-    if not mission_start_time then
-        mission_start_time = Managers.time:time("gameplay")
-        buffs = {}  -- Reset buffs table
-        mission_name = name
-        mod:echo("[Uptime] Tracking started.")
-        return true
-    else
+function mod:try_start_tracking(name)
+    if mod:tracking_in_progress() then
         return false
     end
+    mission_start_time = 0
+    buffs = {}
+    mission_name = name
+    mod:echo("[Uptime] Tracking started mission " .. name)
+    return true
 end
 
 mod.try_end_tracking = function()
-    local mission_end_time = Managers.time:time("gameplay")
+    if not mod:tracking_in_progress() then
+        return false
+    end
+    local mission_end_time = mod:now()
     local mission_duration = mission_end_time - (mission_start_time or mission_end_time)
 
-    mod:echo("[Uptime] Tracking ended.")
     -- Calculate final uptime for all active buffs
     for buff_name, buff_data in pairs(buffs) do
         if buff_data.start_time then
@@ -114,24 +134,14 @@ mod.try_end_tracking = function()
             buffs[buff_name].total_uptime = (buff_data.total_uptime or 0) + (mission_end_time - buff_data.start_time)
             buffs[buff_name].start_time = nil
         end
-
-        local buff_uptime = buff_data.total_uptime or 0
-        local uptime_percent = (buff_uptime / mission_duration) * 100
-
-        -- Calculate average stack count
-        local avg_stacks = 0
-        if buff_uptime > 0 then
-            avg_stacks = buff_data.stack_time_product / buff_uptime
-        end
-
-        -- Display uptime percentage and average stack count
-        mod:echo(string.format("%s: %.1f%s uptime, %.2f avg stacks", buff_name, uptime_percent, "%%", avg_stacks))
     end
 
     local player = Managers.player:local_player(1):name()
     mod:save_entry(buffs, mission_name, mission_duration, player)
     buffs = {}
     mission_start_time = nil
+    mod:echo("[Uptime] Tracking ended.")
+    return true
 end
 
 mod.ignore_buff = function(self, buff_data)
@@ -191,10 +201,13 @@ mod.update_buff = function(self, buff_instance, now)
     return true
 end
 
--- Replace the current _update_buffs hook with this enhanced version
 mod:hook_safe("HudElementPlayerBuffs", "_update_buffs", function(self)
+    if not mod:tracking_in_progress() then
+        return
+    end
+
     local active_buffs_data = self._active_buffs_data
-    local now = Managers.time:time("gameplay")
+    local now = mod:now()
 
     -- Track which buffs are currently active to detect removed buffs later
     local currently_active_buffs = {}
