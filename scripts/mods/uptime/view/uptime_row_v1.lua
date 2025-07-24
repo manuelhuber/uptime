@@ -1,6 +1,6 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
-
+local psyker_talents = mod:original_require("scripts/settings/ability/archetype_talents/talents/psyker_talents")
 local ROW_HEIGHT = 30
 
 local is_stackable = function(buff)
@@ -30,6 +30,22 @@ local columns = {
         condition = is_stackable,
         accessor = function(buff)
             return string.format("%.1f%%", buff.combat_percentage_at_max_stack)
+        end
+    }, {
+        id = "talent_name",
+        display_name = "loc_talent_header",
+        width = 200,
+        accessor = function(buff)
+            if buff.talents then
+                local talent_id = buff.talents[1]
+                if psyker_talents.talents then
+                    return Managers.localization:localize(psyker_talents.talents[talent_id].display_name)
+                else
+                    mod:echo("couldn't load talents")
+
+                end
+            end
+            return ""
         end
     }
 }

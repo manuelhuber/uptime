@@ -129,6 +129,9 @@ function update_buff(buffs, buff_instance, now)
             events = {},
             is_active = true,
             current_stack_count = stack_count,
+            category = buff_instance.buff_category,
+            related_talents = buff_instance:template().related_talents,
+            source_item_id = ((buff_instance._template_context or {}).source_item or {}).__gear_id
         }
         
         -- Record an add event

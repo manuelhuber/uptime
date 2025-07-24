@@ -10,5 +10,7 @@ return {
     },
     loc_percentage_at_max_stacks_header = {
         en = "Max stacks"
+    }, loc_talent_header = {
+        en = "From talent"
     }
 }
