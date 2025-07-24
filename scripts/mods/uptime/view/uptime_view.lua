@@ -1,5 +1,5 @@
 local mod = get_mod("uptime")
-local create_row_widget_v1 = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_row_v1")
+local renderer = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_row_v1")
 local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_definitions")
 mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_data_handler")
 
@@ -24,7 +24,6 @@ function UptimeView:create_rows(buffs)
     local create_widget = function(...)
         return self:_create_widget(...)
     end
-    local index = 0
 
     local sorted_buffs = {}
     for _, buff in pairs(buffs) do
@@ -34,8 +33,11 @@ function UptimeView:create_rows(buffs)
         return a.uptime > b.uptime
     end)
 
+    local header_row = renderer.create_header_row(create_widget)
+    self._widgets[#self._widgets + 1] = header_row
+    local index = 1
     for _, buff in ipairs(sorted_buffs) do
-        local row_widget = create_row_widget_v1(buff, index, create_widget)
+        local row_widget = renderer.create_row(buff, index, create_widget)
         row_widget.offset[2] = (index * ROW_HEIGHT)
         self._widgets[#self._widgets + 1] = row_widget
         index = index + 1
