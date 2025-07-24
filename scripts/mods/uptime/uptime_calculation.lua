@@ -51,57 +51,6 @@ end
 function mod:start_time()
     return mission_start_time
 end
-
--- Helper function to calculate current uptime and stack average for active buffs
-local function calculate_current_values(buff_data)
-    local now = mod:now()
-    local current_uptime = buff_data.total_uptime or 0
-    local current_stack_time_product = buff_data.stack_time_product or 0
-
-    -- If buff is active, add current session to uptime
-    if buff_data.start_time then
-        current_uptime = current_uptime + (now - buff_data.start_time)
-
-        -- Update stack_time_product for current session
-        if buff_data.last_stack_change_time then
-            local duration = now - buff_data.last_stack_change_time
-            current_stack_time_product = current_stack_time_product +
-                    (buff_data.current_stack_count * duration)
-        end
-    end
-
-    -- Calculate average stack count
-    local avg_stacks = 0
-    if current_uptime > 0 then
-        avg_stacks = current_stack_time_product / current_uptime
-    end
-
-    return current_uptime, avg_stacks
-end
-
--- Returns the buffs table with real-time values
-mod.active_buffs = function()
-    local result = {}
-
-    -- Create a copy with real-time values
-    for buff_name, buff_data in pairs(buffs) do
-        result[buff_name] = table.clone(buff_data)
-
-        -- Calculate real-time values for active buffs
-        if buff_data.start_time then
-            local current_uptime, avg_stacks = calculate_current_values(buff_data)
-            result[buff_name].current_uptime = current_uptime
-            result[buff_name].current_avg_stacks = avg_stacks
-        else
-            result[buff_name].current_uptime = buff_data.total_uptime or 0
-            result[buff_name].current_avg_stacks = (buff_data.total_uptime and buff_data.total_uptime > 0)
-                    and (buff_data.stack_time_product / buff_data.total_uptime) or 0
-        end
-    end
-
-    return result
-end
-
 function mod:try_start_tracking(name)
     if mod:tracking_in_progress() then
         return false
@@ -113,7 +62,7 @@ function mod:try_start_tracking(name)
     return true
 end
 
-mod.try_end_tracking = function()
+function mod:try_end_tracking()
     if not mod:tracking_in_progress() then
         return false
     end
@@ -143,6 +92,47 @@ mod.try_end_tracking = function()
     mod:echo("[Uptime] Tracking ended.")
     return true
 end
+mod:hook_safe("HudElementPlayerBuffs", "_update_buffs", function(self)
+    if not mod:tracking_in_progress() then
+        return
+    end
+
+    local active_buffs_data = self._active_buffs_data
+    local now = mod:now()
+
+    -- Track which buffs are currently active to detect removed buffs later
+    local currently_active_buffs = {}
+
+    -- Process all active buffs
+    for i = 1, #active_buffs_data do
+        local buff_data = active_buffs_data[i]
+        local buff_instance = buff_data.buff_instance
+        if not buff_data.remove and buff_instance then
+            local ignore = mod:ignore_buff(buff_data)
+            local buff_title = buff_instance:title()
+            if (not ignore) then
+                mod:update_buff(buff_instance, now)
+                currently_active_buffs[buff_title] = true
+            end
+        end
+    end
+
+    -- Handle buffs that are no longer active
+    for buff_title, buff_data in pairs(buffs) do
+        if buff_data.start_time and not currently_active_buffs[buff_title] then
+            -- Finalize stack tracking calculations
+            if buff_data.last_stack_change_time then
+                local duration = now - buff_data.last_stack_change_time
+                buffs[buff_title].stack_time_product = buff_data.stack_time_product +
+                        (buff_data.current_stack_count * duration)
+            end
+
+            -- Calculate total uptime
+            buffs[buff_title].total_uptime = (buff_data.total_uptime or 0) + (now - buff_data.start_time)
+            buffs[buff_title].start_time = nil
+        end
+    end
+end)
 
 mod.ignore_buff = function(self, buff_data)
     local buff_instance = buff_data.buff_instance
@@ -201,44 +191,52 @@ mod.update_buff = function(self, buff_instance, now)
     return true
 end
 
-mod:hook_safe("HudElementPlayerBuffs", "_update_buffs", function(self)
-    if not mod:tracking_in_progress() then
-        return
-    end
-
-    local active_buffs_data = self._active_buffs_data
+-- Helper function to calculate current uptime and stack average for active buffs
+local function calculate_current_values(buff_data)
     local now = mod:now()
+    local current_uptime = buff_data.total_uptime or 0
+    local current_stack_time_product = buff_data.stack_time_product or 0
 
-    -- Track which buffs are currently active to detect removed buffs later
-    local currently_active_buffs = {}
+    -- If buff is active, add current session to uptime
+    if buff_data.start_time then
+        current_uptime = current_uptime + (now - buff_data.start_time)
 
-    -- Process all active buffs
-    for i = 1, #active_buffs_data do
-        local buff_data = active_buffs_data[i]
-        local buff_instance = buff_data.buff_instance
-        if not buff_data.remove and buff_instance then
-            local ignore = mod:ignore_buff(buff_data)
-            local buff_title = buff_instance:title()
-            if (not ignore) then
-                mod:update_buff(buff_instance, now)
-                currently_active_buffs[buff_title] = true
-            end
+        -- Update stack_time_product for current session
+        if buff_data.last_stack_change_time then
+            local duration = now - buff_data.last_stack_change_time
+            current_stack_time_product = current_stack_time_product +
+                    (buff_data.current_stack_count * duration)
         end
     end
 
-    -- Handle buffs that are no longer active
-    for buff_title, buff_data in pairs(buffs) do
-        if buff_data.start_time and not currently_active_buffs[buff_title] then
-            -- Finalize stack tracking calculations
-            if buff_data.last_stack_change_time then
-                local duration = now - buff_data.last_stack_change_time
-                buffs[buff_title].stack_time_product = buff_data.stack_time_product +
-                        (buff_data.current_stack_count * duration)
-            end
+    -- Calculate average stack count
+    local avg_stacks = 0
+    if current_uptime > 0 then
+        avg_stacks = current_stack_time_product / current_uptime
+    end
 
-            -- Calculate total uptime
-            buffs[buff_title].total_uptime = (buff_data.total_uptime or 0) + (now - buff_data.start_time)
-            buffs[buff_title].start_time = nil
+    return current_uptime, avg_stacks
+end
+
+-- Returns the buffs table with real-time values
+mod.active_buffs = function()
+    local result = {}
+
+    -- Create a copy with real-time values
+    for buff_name, buff_data in pairs(buffs) do
+        result[buff_name] = table.clone(buff_data)
+
+        -- Calculate real-time values for active buffs
+        if buff_data.start_time then
+            local current_uptime, avg_stacks = calculate_current_values(buff_data)
+            result[buff_name].current_uptime = current_uptime
+            result[buff_name].current_avg_stacks = avg_stacks
+        else
+            result[buff_name].current_uptime = buff_data.total_uptime or 0
+            result[buff_name].current_avg_stacks = (buff_data.total_uptime and buff_data.total_uptime > 0)
+                    and (buff_data.stack_time_product / buff_data.total_uptime) or 0
         end
     end
-end)
+
+    return result
+end
