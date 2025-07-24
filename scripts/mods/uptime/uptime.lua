@@ -15,7 +15,7 @@ local mod = get_mod("uptime")
 local view_name = "uptime_view"
 -- ===== Load Required Files =====
 -- Core functionality
-mod:io_dofile("uptime/scripts/mods/uptime/uptime_calculation")  -- Buff tracking calculations
+mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_tracking")  -- Buff tracking calculations
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_io")           -- File I/O operations
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_ui")           -- UI components
 mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")  -- History functionality
