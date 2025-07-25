@@ -11,7 +11,6 @@ function mod:try_start_tracking(params)
     mod:start_mission_tracking()
     mod:start_buff_tracking()
     mod.mission_params = params
-    mod:echo("Tracking started mission " .. params.mission_name)
     return true
 end
 

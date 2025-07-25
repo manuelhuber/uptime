@@ -104,8 +104,6 @@ mod.save_entry = function(self, entry)
     local cache = self:get_history_entries_cache()
     cache[#cache + 1] = file_name
     self:set_history_entries_cache(cache)
-
-    mod:echo("History saved to: " .. file_name)
 end
 
 -- Load uptime data from a file

@@ -19,6 +19,7 @@ mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_tracking")  -- Buff tr
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_io")           -- File I/O operations
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_ui")           -- UI components
 mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")  -- History functionality
+local mission_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/missions")
 
 -- ===== Register Commands =====
 -- Toggle uptime tracking (start/stop)
@@ -60,18 +61,14 @@ mod:hook(CLASS.StateGameplay, "on_enter", function(func, self, parent, params, c
     if mission_name ~= "hub_ship" then
         local tracking_started = mod:try_start_tracking(params)
         if not tracking_started then
-            mod:echo("FAILED to start tracking: " .. mission_name)
+            mod:echo("FAILED to start tracking: " .. mission_lib.localize_name(mission_name))
         end
     end
     func(self, parent, params, creation_context, ...)
 end)
 
 mod:hook(CLASS.StateGameplay, "on_exit", function(func, self, exit_params, ...)
-    local ended_tracking = mod:try_end_tracking()
-    if ended_tracking then
-        mod:echo("ended tracking via StateGameplay")
-    end
-
+    mod:try_end_tracking()
     func(self, exit_params, ...)
 end)
 
