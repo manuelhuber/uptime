@@ -5,6 +5,8 @@ mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_data_handler")
 local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
 local tooltip_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/tooltip_definition")
 local TalentLayoutParser = mod:original_require("scripts/ui/views/talent_builder_view/utilities/talent_layout_parser")
+local package_manager = mod:io_dofile("uptime/scripts/mods/uptime/uptime_package_manager")
+
 local UptimeView = class("UptimeView", "BaseView")
 
 function UptimeView:init(settings, context)
@@ -16,8 +18,20 @@ function UptimeView:init(settings, context)
 end
 
 function UptimeView:on_enter()
+    self:for_all_icons(package_manager.load_resource)
     self:create_rows(self.display_values.buffs)
     UptimeView.super.on_enter(self)
+end
+
+function UptimeView:on_exit(...)
+    self:for_all_icons(package_manager.unload_resource)
+    UptimeView.super.on_exit(self, ...)
+end
+
+function UptimeView:for_all_icons(func)
+    for _, buff in pairs(self.display_values.buffs) do
+        func(buff.icon)
+    end
 end
 
 function UptimeView:create_rows(buffs)
@@ -68,7 +82,6 @@ function UptimeView:setup_tooltip(buff, hovered_widget)
     local widget = self._widgets_by_name.tooltip
     widget.visible = true
     local content = widget.content
-    local style = widget.style
     if buff.talents then
         local talent = get_talent(buff.talents[1])
         content.title = Managers.localization:localize(talent.display_name)
