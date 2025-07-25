@@ -1,4 +1,5 @@
 local mod = get_mod("uptime")
+local item_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/items")
 
 --[[
     Buff Event Tracking Data Model
@@ -119,8 +120,15 @@ function update_buff(buffs, buff_instance, now)
     local buff_title = buff_instance:title()
     local stack_count = buff_instance:stat_buff_stacking_count()
 
+    local item_name = nil
+    if (buff_instance._template_context or {}).source_item then
+        local item = buff_instance._template_context.source_item
+        item_name = item_lib.get_name(item)
+    end
+
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
+        local template = buff_instance:template()
         buffs[buff_title] = {
             icon = buff_instance:_hud_icon(),
             gradient_map = buff_instance:hud_icon_gradient_map(),
@@ -129,9 +137,12 @@ function update_buff(buffs, buff_instance, now)
             events = {},
             is_active = true,
             current_stack_count = stack_count,
-            category = buff_instance.buff_category,
-            related_talents = buff_instance:template().related_talents,
-            source_item_id = ((buff_instance._template_context or {}).source_item or {}).__gear_id
+            category = template.buff_category,
+            related_talents = template.related_talents,
+            source_item_name = item_name,
+            --source_item_id = ((buff_instance._template_context or {}).source_item or {}).__gear_id,
+            --source_item = ((buff_instance._template_context or {}).source_item or nil),
+            --instance = buff_instance,
         }
 
         -- Record an add event
