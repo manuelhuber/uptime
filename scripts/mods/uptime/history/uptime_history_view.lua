@@ -426,7 +426,7 @@ end
 -- Callback for when the delete button is pressed
 UptimeHistoryView.cb_delete_pressed = function(self)
     if self._data_handler:delete_entry(self.entry) then
-        mod:echo("[Uptime] History entry deleted")
+        mod:echo("History entry deleted")
         self.entry = nil
         mod:close_view()
         self:_setup_entries_config()

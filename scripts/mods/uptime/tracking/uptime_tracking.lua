@@ -11,7 +11,7 @@ function mod:try_start_tracking(params)
     mod:start_mission_tracking()
     mod:start_buff_tracking()
     mod.mission_params = params
-    mod:echo("[Uptime] Tracking started mission " .. params.mission_name)
+    mod:echo("Tracking started mission " .. params.mission_name)
     return true
 end
 
@@ -38,6 +38,6 @@ function mod:try_end_tracking()
         },
     }
     mod:save_entry(entry)
-    mod:echo("[Uptime] Tracking ended.")
+    mod:echo("Tracking ended.")
     return true
 end

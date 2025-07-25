@@ -105,20 +105,20 @@ mod.save_entry = function(self, entry)
     cache[#cache + 1] = file_name
     self:set_history_entries_cache(cache)
 
-    mod:echo("[Uptime] History saved to: " .. file_name)
+    mod:echo("History saved to: " .. file_name)
 end
 
 -- Load uptime data from a file
 mod.load_entry = function(self, path)
     if not file_exists(path) then
-        mod:echo("[Uptime] Error: File not found: " .. path)
+        mod:echo("Error: File not found: " .. path)
         return nil
     end
 
     local entry = nil
     for entry_json in _io.lines(path) do
         if entry then
-            mod:echo("[Uptime] Received more than 1 line when loading file!")
+            mod:echo("Received more than 1 line when loading file!")
         else
             entry = json.decode(entry_json)
         end
@@ -137,8 +137,7 @@ local function scandir(directory)
         file_names[i] = filename
     end
     pfile:close()
-    mod:echo("[Uptime] History entries loaded from directory")
-    mod:echo(file_names[1])
+    mod:echo("History entries loaded from directory")
     return file_names
 end
 
