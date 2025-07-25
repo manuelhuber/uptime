@@ -41,7 +41,7 @@ function UptimeView:create_rows(buffs)
     end
 
     local horizontal_margins_for_border = 75
-    local final_width = renderer.width + horizontal_margins_for_border
+    local final_width = renderer.get_width() + horizontal_margins_for_border
 
     local vertical_margins_for_border = 225
     local final_height = index * renderer.row_height + vertical_margins_for_border
