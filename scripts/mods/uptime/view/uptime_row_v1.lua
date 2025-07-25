@@ -4,7 +4,7 @@ local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_d
 local get_barchart_widget = mod:io_dofile("uptime/scripts/mods/uptime/view/barchart_widget")
 local ui_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/ui")
 
-local ROW_HEIGHT = 35
+local ROW_HEIGHT = 40
 
 local is_stackable = function(buff)
     return buff.stackable
@@ -19,8 +19,7 @@ local data_columns = {
         accessor = function(buff)
             return ui_lib.format_seconds(buff.uptime)
         end
-    },
-    {
+    }, {
         id = "uptime_percentage",
         display_name = "loc_uptime_percentage_header",
         setting = "show_uptime_percentage",
@@ -28,8 +27,7 @@ local data_columns = {
         accessor = function(buff)
             return string.format("%.1f%%", buff.uptime_percentage)
         end
-    },
-    {
+    }, {
         id = "uptime_combat",
         display_name = "loc_uptime_combat_header",
         setting = "show_uptime_combat",
@@ -37,8 +35,7 @@ local data_columns = {
         accessor = function(buff)
             return ui_lib.format_seconds(buff.uptime_combat)
         end
-    },
-    {
+    }, {
         id = "uptime_combat_percentage",
         display_name = "loc_uptime_combat_percentage_header",
         setting = "show_uptime_combat_percentage",
@@ -47,8 +44,8 @@ local data_columns = {
             return string.format("%.1f%%", buff.uptime_combat_percentage)
         end
     }, {
-        id = "percentage_per_stack",
-        display_name = "loc_percentage_per_stack",
+        id = "combat_percentage_per_stack",
+        display_name = "loc_combat_percentage_per_stack_header",
         setting = "show_combat_percentage_per_stack",
         width = 400,
         accessor = function(buff, uptime_view)
@@ -90,7 +87,7 @@ local data_columns = {
     },
 }
 
-local ICON_PADDING = 8
+local ICON_PADDING = 2
 local ICON_SIZE = ROW_HEIGHT - ICON_PADDING
 local row_pass_template = {
     {

@@ -1,3 +1,13 @@
+local mod = get_mod("uptime")
+mod:add_global_localize_strings({
+    loc_delete_entry = {
+        en = "Delete entry"
+    },
+    loc_scan_folder = {
+        en = "Scan directory for files"
+    },
+})
+
 return {
     mod_description = {
         en = "Tracks uptime of buffs.",
@@ -13,17 +23,10 @@ return {
     }, loc_talent_header = {
         en = "From talent"
     },
-
     loc_percentage_per_stack = {
         en = "Uptime (by Stack)"
     },
-    loc_delete_entry = {
-        en = "Delete entry"
-    },
-    loc_scan_folder = {
-        en = "Scan directory for files"
-    },
-    --
+
     -- general settings
     open_uptime_history = {
         en = "Open Uptime History",
