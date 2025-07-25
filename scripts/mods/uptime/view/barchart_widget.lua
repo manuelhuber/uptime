@@ -37,7 +37,8 @@ function get_widget(uptime_view, scene_graph_id, width, height, percentage_per_s
                     text_horizontal_alignment = "center",
                     size = { section_width, height },
                     offset = { offset, 0 },
-                    text_color = Color.black(255, true),
+                    text_color = Color.terminal_frame(255, true),
+                    drop_shadow = false,
                 },
             }
         end

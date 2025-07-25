@@ -1,7 +1,7 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_definitions")
-local get_timeline_widget = mod:io_dofile("uptime/scripts/mods/uptime/view/timeline_widget")
+local get_barchart_widget = mod:io_dofile("uptime/scripts/mods/uptime/view/barchart_widget")
 
 local ROW_HEIGHT = 35
 
@@ -22,7 +22,7 @@ local data_columns = {
         display_name = "loc_percentage_per_stack",
         width = 400,
         accessor = function(buff, uptime_view)
-            return get_timeline_widget(
+            return get_barchart_widget(
                     uptime_view,
                     Definitions.row_scene_graph_id,
                     400,
