@@ -15,9 +15,9 @@ function get_text_width(ui_renderer, text, text_style, optional_text_size)
 end
 
 function seconds_to_display_format(seconds)
-    local minutes = seconds / 60
-    local remaining_seconds = seconds % 60
-    return minutes .. ":" .. remaining_seconds
+    local minutes = math.floor(seconds / 60)
+    local remaining_seconds = math.floor(seconds % 60)
+    return string.format("%02d", minutes) .. ":" .. string.format("%02d", remaining_seconds)
 end
 
 return {
