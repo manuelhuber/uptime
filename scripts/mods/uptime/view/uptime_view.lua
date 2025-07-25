@@ -21,10 +21,6 @@ function UptimeView:on_enter()
 end
 
 function UptimeView:create_rows(buffs)
-    local create_widget = function(...)
-        return self:_create_widget(...)
-    end
-
     local sorted_buffs = {}
     for _, buff in pairs(buffs) do
         table.insert(sorted_buffs, buff)
@@ -33,11 +29,11 @@ function UptimeView:create_rows(buffs)
         return a.uptime > b.uptime
     end)
 
-    local header_row = renderer.create_header_row(create_widget)
+    local header_row = renderer.create_header_row(self)
     self._widgets[#self._widgets + 1] = header_row
     local index = 2 -- header row is double height
     for _, buff in ipairs(sorted_buffs) do
-        local widgets = renderer.create_row(buff, index, create_widget)
+        local widgets = renderer.create_row(self, buff, index)
         for _, widget in pairs(widgets) do
             self._widgets[#self._widgets + 1] = widget
         end

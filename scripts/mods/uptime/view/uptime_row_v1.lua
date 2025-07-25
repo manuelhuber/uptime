@@ -21,9 +21,9 @@ local data_columns = {
         id = "percentage_per_stack",
         display_name = "loc_percentage_per_stack",
         width = 400,
-        accessor = function(buff, _create_widget)
+        accessor = function(buff, uptime_view)
             return get_timeline_widget(
-                    _create_widget,
+                    uptime_view,
                     Definitions.row_scene_graph_id,
                     400,
                     ROW_HEIGHT - 8,
@@ -139,10 +139,10 @@ function add_columns(pass_template, column_definitions, background_colors, row_h
     return pass_template
 end
 
-function create_header_row_widget_v1(_create_widget)
+function create_header_row_widget_v1(uptime_view)
     local template = add_columns(table.clone(row_pass_template), data_columns, colors.row, ROW_HEIGHT * 2)
     local row_widget_def = UIWidget.create_definition(template, Definitions.row_scene_graph_id)
-    local widget = _create_widget("header_row", row_widget_def)
+    local widget = uptime_view:_create_widget("header_row", row_widget_def)
 
     for _, column in pairs(data_columns) do
         widget.content[column.id] = mod:localize(column.display_name)
@@ -152,7 +152,7 @@ function create_header_row_widget_v1(_create_widget)
     return widget
 end
 
-function create_row_widget_v1(buff, index, _create_widget)
+function create_row_widget_v1(uptime_view, buff, index)
     local row_colors
     if index % 2 == 1 then
         row_colors = colors.row
@@ -162,7 +162,7 @@ function create_row_widget_v1(buff, index, _create_widget)
     local template = add_columns(table.clone(row_pass_template), data_columns, row_colors, ROW_HEIGHT)
     local row_widget_def = UIWidget.create_definition(template, Definitions.row_scene_graph_id)
 
-    local widget = _create_widget("row" .. index, row_widget_def)
+    local widget = uptime_view:_create_widget("row" .. index, row_widget_def)
     widget.buff = buff
 
     local material = widget.style.buff_icon.material_values or {}
@@ -177,7 +177,7 @@ function create_row_widget_v1(buff, index, _create_widget)
     for _, column in pairs(data_columns) do
         widget.content[column.id] = ""
         if not column.condition or column.condition(buff) then
-            local value = column.accessor(buff, _create_widget)
+            local value = column.accessor(buff, uptime_view)
             if type(value) == "string" then
                 widget.content[column.id] = value
             else
