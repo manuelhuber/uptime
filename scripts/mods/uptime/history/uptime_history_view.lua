@@ -2,7 +2,6 @@ local mod = get_mod("uptime")
 local DMF = get_mod("DMF")
 
 local ScriptWorld = mod:original_require("scripts/foundation/utilities/script_world")
-local InputUtils = mod:original_require("scripts/managers/input/input_utils")
 local UIRenderer = mod:original_require("scripts/managers/ui/ui_renderer")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local UIWidgetGrid = mod:original_require("scripts/ui/widget_logic/ui_widget_grid")
@@ -75,7 +74,7 @@ UptimeHistoryView._enable_settings_overlay = function(self, enable)
     settings_overlay_widget.content.visible = enable
 end
 
-UptimeHistoryView.present_entry_widgets = function(self, entry_title)
+UptimeHistoryView.present_entry_widgets = function(self)
     if self.entry then
         local context = {
             entry = self.entry
@@ -584,30 +583,6 @@ UptimeHistoryView.close_keybind_popup = function(self, force_close)
     self._active_keybind_widget = nil
 end
 
--- Set the position of a scenegraph node
-UptimeHistoryView._set_scenegraph_position = function(self, scenegraph_id, position)
-    local ui_scenegraph = self._ui_scenegraph
-    local scenegraph_node = ui_scenegraph[scenegraph_id]
-
-    -- Only update if the node exists
-    if scenegraph_node then
-        scenegraph_node.position[1] = position[1]
-        scenegraph_node.position[2] = position[2]
-    end
-end
-
--- Set the size of a scenegraph node
-UptimeHistoryView._set_scenegraph_size = function(self, scenegraph_id, size)
-    local ui_scenegraph = self._ui_scenegraph
-    local scenegraph_node = ui_scenegraph[scenegraph_id]
-
-    -- Only update if the node exists
-    if scenegraph_node then
-        scenegraph_node.size[1] = size[1]
-        scenegraph_node.size[2] = size[2]
-    end
-end
-
 -- Main draw function for the view
 UptimeHistoryView.draw = function(self, dt, t, input_service, layer)
     -- Draw main UI elements
@@ -629,17 +604,8 @@ UptimeHistoryView.draw = function(self, dt, t, input_service, layer)
     UptimeHistoryView.super.draw(self, dt, t, input_service, layer)
 end
 
--- Draw UI elements
-UptimeHistoryView._draw_elements = function(self, dt, t, ui_renderer, render_settings, input_service)
-    -- Just call parent method as we don't need to add anything
-    UptimeHistoryView.super._draw_elements(self, dt, t, ui_renderer, render_settings, input_service)
-end
-
 -- Draw grid widgets with proper interaction handling
 UptimeHistoryView._draw_grid = function(self, grid, widgets, interaction_widget, dt, t, input_service)
-    -- Determine if grid is hovered (either using cursor or via interaction widget)
-    local is_grid_hovered = not self._using_cursor_navigation or interaction_widget.content.hotspot.is_hover or false
-
     -- Create null input service for non-interactive elements
     local null_input_service = input_service:null_service()
 
