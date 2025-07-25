@@ -60,7 +60,7 @@ UptimeHistoryView._setup_input_legend = function(self)
         local legend_input = legend_inputs[i]
         local on_pressed_callback = legend_input.on_pressed_callback and callback(self, legend_input.on_pressed_callback)
         local visibility_function = legend_input.visibility_function
-        if legend_input.display_name == "loc_scoreboard_delete" then
+        if legend_input.display_name == "loc_delete_entry" then
             visibility_function = function()
                 return self.entry
             end

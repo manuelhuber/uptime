@@ -18,5 +18,11 @@ return {
     },
     loc_percentage_per_stack = {
         en = "Uptime (by Stack)"
-    }
+    },
+    loc_delete_entry = {
+        en = "Delete entry"
+    },
+    loc_scan_folder = {
+        en = "Scan directory for files"
+    },
 }
