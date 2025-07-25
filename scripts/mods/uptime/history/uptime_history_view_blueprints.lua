@@ -16,8 +16,6 @@ local ButtonPassTemplates = mod:original_require("scripts/ui/pass_templates/butt
 -- ===== Grid and Size Settings =====
 local grid_size = OptionsViewSettings.grid_size
 local grid_width = grid_size[1]
-local settings_grid_width = 1000
-local settings_value_width = 500
 local settings_value_height = 75
 
 -- ===== Button Style Definitions =====
