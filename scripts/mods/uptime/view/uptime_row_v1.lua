@@ -1,6 +1,7 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_definitions")
+local get_timeline_widget = mod:io_dofile("uptime/scripts/mods/uptime/view/timeline_widget")
 
 local ROW_HEIGHT = 35
 
@@ -17,6 +18,19 @@ local data_columns = {
             return string.format("%.1f%%", buff.uptime_combat_percentage)
         end
     }, {
+        id = "percentage_per_stack",
+        display_name = "loc_percentage_per_stack",
+        width = 400,
+        accessor = function(buff, _create_widget)
+            return get_timeline_widget(
+                    _create_widget,
+                    Definitions.row_scene_graph_id,
+                    400,
+                    ROW_HEIGHT - 8,
+                    buff.combat_percentage_per_stack
+            )
+        end
+    }, {
         id = "average_stacks_combat",
         display_name = "loc_avg_stacks_header",
         width = 80,
@@ -26,22 +40,6 @@ local data_columns = {
         end
     }, {
         id = "combat_percentage_at_max_stack",
-        display_name = "loc_percentage_at_max_stacks_header",
-        width = 80,
-        condition = is_stackable,
-        accessor = function(buff)
-            return string.format("%.1f%%", buff.combat_percentage_at_max_stack)
-        end
-    }, {
-        id = "combat_percentage_at_max_stack2",
-        display_name = "loc_percentage_at_max_stacks_header",
-        width = 80,
-        condition = is_stackable,
-        accessor = function(buff)
-            return string.format("%.1f%%", buff.combat_percentage_at_max_stack)
-        end
-    }, {
-        id = "combat_percentage_at_max_stack3",
         display_name = "loc_percentage_at_max_stacks_header",
         width = 80,
         condition = is_stackable,
@@ -168,17 +166,28 @@ function create_row_widget_v1(buff, index, _create_widget)
     material.gradient_map = buff.gradient_map
     widget.style.buff_icon.material_values = material
 
+    local top_offset = (index * ROW_HEIGHT)
+
+    local additional_widgets = {}
+    local total_width = ROW_HEIGHT
     for _, column in pairs(data_columns) do
-        local value = ""
+        widget.content[column.id] = ""
         if not column.condition or column.condition(buff) then
-            value = column.accessor(buff)
+            local value = column.accessor(buff, _create_widget)
+            if type(value) == "string" then
+                widget.content[column.id] = value
+            else
+                -- value is a widget
+                value.offset = { total_width, top_offset + 4 }
+                additional_widgets[#additional_widgets + 1] = value
+            end
         end
-        widget.content[column.id] = value
+        total_width = total_width + column.width
     end
 
-    widget.offset[2] = (index * ROW_HEIGHT)
+    widget.offset[2] = top_offset
 
-    return widget
+    return { widget, unpack(additional_widgets) }
 end
 
 return {

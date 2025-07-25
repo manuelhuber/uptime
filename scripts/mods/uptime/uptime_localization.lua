@@ -16,4 +16,7 @@ return {
     open_uptime_history = {
         en = "Open Uptime History",
     },
+    loc_percentage_per_stack = {
+        en = "Uptime (by Stack)"
+    }
 }

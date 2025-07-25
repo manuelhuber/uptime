@@ -37,10 +37,13 @@ function UptimeView:create_rows(buffs)
     self._widgets[#self._widgets + 1] = header_row
     local index = 2 -- header row is double height
     for _, buff in ipairs(sorted_buffs) do
-        local row_widget = renderer.create_row(buff, index, create_widget)
-        self._widgets[#self._widgets + 1] = row_widget
+        local widgets = renderer.create_row(buff, index, create_widget)
+        for _, widget in pairs(widgets) do
+            self._widgets[#self._widgets + 1] = widget
+        end
         index = index + 1
     end
+    --self:_set_scenegraph_size("container", 400,200)
 end
 
 function UptimeView:update(...)
