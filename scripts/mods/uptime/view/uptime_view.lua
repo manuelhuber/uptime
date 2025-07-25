@@ -46,17 +46,23 @@ function UptimeView:create_rows(buffs)
 end
 
 function UptimeView:update(...)
+    local show_tooltip = false
     for _, widget in pairs(self._widgets) do
-        if (widget.content.hotspot or {}).is_hover and widget.buff then
-            self:setup_tooltip(widget.buff)
+        if (widget.content.hotspot or {}).is_hover and widget.buff and widget.buff.talents then
+            show_tooltip = true
+            self:setup_tooltip(widget.buff, widget)
         end
+    end
+    if not show_tooltip then
+        local tooltip = self._widgets_by_name.tooltip
+        tooltip.visible = false
     end
     return UptimeView.super.update(self, ...)
 end
 
-function UptimeView:setup_tooltip(buff)
-    local widgets_by_name = self._widgets_by_name
-    local widget = widgets_by_name.tooltip
+function UptimeView:setup_tooltip(buff, hovered_widget)
+    local widget = self._widgets_by_name.tooltip
+    widget.visible = true
     local content = widget.content
     local style = widget.style
     if buff.talents then
@@ -65,6 +71,10 @@ function UptimeView:setup_tooltip(buff)
         content.description = TalentLayoutParser.talent_description(talent, 1, Color.ui_terminal(255, true))
     end
     tooltip_definition.resize_tooltip(self, widget, self._ui_renderer)
+
+    local tooltip_offset = widget.offset
+    tooltip_offset[1] = hovered_widget.offset[1]
+    tooltip_offset[2] = hovered_widget.offset[2]
 end
 
 return UptimeView

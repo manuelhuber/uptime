@@ -5,16 +5,16 @@ local UIRenderer = require("scripts/managers/ui/ui_renderer")
 
 local tooltip_scene = {
     horizontal_alignment = "left",
-    parent = "screen",
+    parent = "container",
     vertical_alignment = "top",
     size = {
         400,
         400,
     },
     position = {
-        200,
-        200,
-        130,
+        75,
+        75,
+        330,
     },
 }
 local tooltip_widget = UIWidget.create_definition({
