@@ -34,7 +34,6 @@ end
 
 function mod:now()
     if not Managers.time:has_timer("gameplay") then
-        mod:echo("need time, but gameplay time doesn't exist")
         return 0
     end
     return Managers.time:time("gameplay")
