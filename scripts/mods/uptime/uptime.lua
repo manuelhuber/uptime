@@ -58,7 +58,7 @@ end)
 mod:hook(CLASS.StateGameplay, "on_enter", function(func, self, parent, params, creation_context, ...)
     local mission_name = params.mission_name
     if mission_name ~= "hub_ship" then
-        local tracking_started = mod:try_start_tracking(mission_name)
+        local tracking_started = mod:try_start_tracking(params)
         if not tracking_started then
             mod:echo("[Uptime] FAILED to start tracking: " .. mission_name)
         end
