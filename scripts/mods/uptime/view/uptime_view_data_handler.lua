@@ -15,19 +15,8 @@ function generate_display_values_for_mission(mission)
     local total_time = mission.end_time - mission.start_time
 
     -- Calculate total combat time by summing up all combat sections
-    local combat_time = 0
+    local combat_time = calculate_total_combat_time(mission)
     local combats = mission.combats or {}
-
-    for _, combat in ipairs(combats) do
-        -- Ensure combat time doesn't exceed mission time
-        local combat_start = math.max(combat.start_time, mission.start_time)
-        local combat_end = math.min(combat.end_time, mission.end_time)
-
-        -- Only count valid combat sections
-        if combat_end > combat_start then
-            combat_time = combat_time + (combat_end - combat_start)
-        end
-    end
 
     -- Calculate combat percentage (avoid division by zero)
     local combat_percentage = 0
@@ -59,6 +48,7 @@ function generate_display_values_for_buff(mission, buff)
     local total_uptime = calculate_uptime(active_periods)
 
     local mission_time = mission.end_time - mission.start_time
+    local combat_time = calculate_total_combat_time(mission)
     local uptime_percentage = (total_uptime / mission_time) * 100
 
     -- Initialize combat uptime variables
@@ -76,6 +66,7 @@ function generate_display_values_for_buff(mission, buff)
 
     -- Calculate combat time per stack
     local combat_time_per_stack = calculate_combat_time_per_stack(buff.events, mission, max_stacks)
+    local combat_percentage_per_stack = calculate_combat_percentage_per_stack(combat_time_per_stack, combat_time)
 
     -- Calculate time at max stack
     local time_at_max_stack = time_per_stack[max_stacks] or 0
@@ -97,6 +88,7 @@ function generate_display_values_for_buff(mission, buff)
 
         time_per_stack = time_per_stack,
         combat_time_per_stack = combat_time_per_stack,
+        combat_percentage_per_stack = combat_percentage_per_stack,
 
         time_at_max_stack = time_at_max_stack,
         combat_time_at_max_stack = combat_time_at_max_stack,
@@ -228,7 +220,6 @@ function calculate_time_per_stack(buff_events, max_stacks)
     return time_per_stack
 end
 
--- Calculate combat time per stack
 function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
     local combat_time_per_stack = {}
     for i = 1, max_stacks do
@@ -270,7 +261,14 @@ function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
     return combat_time_per_stack
 end
 
--- Calculate average stacks
+function calculate_combat_percentage_per_stack(combat_time_per_stack, combat_time)
+    local percentages = {}
+    for i, value in pairs(combat_time_per_stack) do
+        percentages[i] = (value / combat_time) * 100
+    end
+    return percentages
+end
+
 function calculate_average_stacks(time_per_stack, total_uptime, max_stacks)
     local average_stacks = 0
 
