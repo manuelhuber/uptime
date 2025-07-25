@@ -5,6 +5,7 @@ mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_data_handler")
 local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
 local tooltip_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/tooltip_definition")
 local TalentLayoutParser = mod:original_require("scripts/ui/views/talent_builder_view/utilities/talent_layout_parser")
+local get_timeline_widget = mod:io_dofile("uptime/scripts/mods/uptime/view/timeline_widget")
 local package_manager = mod:io_dofile("uptime/scripts/mods/uptime/uptime_package_manager")
 
 local UptimeView = class("UptimeView", "BaseView")
@@ -19,8 +20,20 @@ end
 
 function UptimeView:on_enter()
     self:for_all_icons(package_manager.load_resource)
+    self:create_mission_section(self.display_values.mission)
     self:create_rows(self.display_values.buffs)
     UptimeView.super.on_enter(self)
+end
+
+function UptimeView:create_mission_section(mission)
+    local widget = get_timeline_widget(
+            self,
+            self._definitions.mission_section_scene_graph_id,
+            renderer.get_width(),
+            50,
+            mission.combats_segments,
+            mission.time)
+    self._widgets[#self._widgets + 1] = widget
 end
 
 function UptimeView:on_exit(...)

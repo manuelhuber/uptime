@@ -27,7 +27,8 @@ function generate_display_values_for_mission(mission)
     return {
         time = total_time,
         combat_time = combat_time,
-        combat_percentage = combat_percentage
+        combat_percentage = combat_percentage,
+        combats_segments = combats
     }
 end
 
