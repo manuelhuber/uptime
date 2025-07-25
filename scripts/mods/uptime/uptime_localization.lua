@@ -12,5 +12,8 @@ return {
         en = "Max stacks"
     }, loc_talent_header = {
         en = "From talent"
-    }
+    },
+    open_uptime_history = {
+        en = "Open Uptime History",
+    },
 }
