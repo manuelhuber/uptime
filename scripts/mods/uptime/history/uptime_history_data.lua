@@ -1,4 +1,5 @@
 local mod = get_mod("uptime")
+local mission_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/missions")
 
 -- UptimeHistoryData handles all data-related operations for uptime history entries
 local UptimeHistoryData = class("UptimeHistoryData")
@@ -28,12 +29,19 @@ end
 
 -- Create an entry from history data
 UptimeHistoryData.create_entry = function(self, history_entry)
-    local mission_name = history_entry.mission_name
 
-    -- Create localized string for the entry title
-    local date_string = tostring(history_entry.date)
+    local data = history_entry.meta_data
+    local mission_name = mission_lib.localize_name(data.mission_name)
+    local mission_difficulty = mission_lib.localize_difficulty(data.mission_difficulty)
+    local mission_modifier = mission_lib.localize_modifier(data.mission_modifier)
+    local title = mission_name or "DEBUG"
+    if mission_difficulty then
+        title = title .. " | " .. mission_difficulty
+    end
+    if mission_modifier then
+        title = title .. " | " .. mission_modifier
+    end
 
-    local title = date_string .. " | " .. mission_name
     local subtitle = history_entry.player or ""
 
     -- Create and return the entry
