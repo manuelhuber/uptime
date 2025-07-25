@@ -26,7 +26,7 @@ function UptimeView:create_rows(buffs)
         table.insert(sorted_buffs, buff)
     end
     table.sort(sorted_buffs, function(a, b)
-        return a.uptime > b.uptime
+        return a.uptime_combat > b.uptime_combat
     end)
 
     local header_row = renderer.create_header_row(self)
