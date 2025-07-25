@@ -36,10 +36,8 @@ function UptimeView:create_rows(buffs)
     local header_row = renderer.create_header_row(create_widget)
     self._widgets[#self._widgets + 1] = header_row
     local index = 2 -- header row is double height
-    local padding = 8
     for _, buff in ipairs(sorted_buffs) do
         local row_widget = renderer.create_row(buff, index, create_widget)
-        row_widget.offset[2] = (index * (renderer.row_height + padding))
         self._widgets[#self._widgets + 1] = row_widget
         index = index + 1
     end
