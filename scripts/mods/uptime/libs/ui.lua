@@ -1,6 +1,6 @@
 local mod = get_mod("uptime")
-local UIFonts = require("scripts/managers/ui/ui_fonts")
-local UIRenderer = require("scripts/managers/ui/ui_renderer")
+local UIFonts = mod:original_require("scripts/managers/ui/ui_fonts")
+local UIRenderer = mod:original_require("scripts/managers/ui/ui_renderer")
 
 function get_text_height(ui_renderer, text, text_style, optional_text_size)
     local text_options = UIFonts.get_font_options_by_style(text_style)
@@ -14,7 +14,14 @@ function get_text_width(ui_renderer, text, text_style, optional_text_size)
     return text_width
 end
 
+function seconds_to_display_format(seconds)
+    local minutes = seconds / 60
+    local remaining_seconds = seconds % 60
+    return minutes .. ":" .. remaining_seconds
+end
+
 return {
     get_text_height = get_text_height,
-    get_text_width = get_text_width
+    get_text_width = get_text_width,
+    format_seconds = seconds_to_display_format,
 }
