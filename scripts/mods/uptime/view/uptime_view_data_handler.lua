@@ -191,6 +191,10 @@ end
 -- Calculate time spent at each stack level
 function calculate_time_per_stack(buff_events, max_stacks)
     local time_per_stack = {}
+    for i = 1, max_stacks do
+        time_per_stack[i] = 0
+    end
+
     if buff_events then
         local current_stack = 0
         local last_time = nil
@@ -218,6 +222,10 @@ end
 
 function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
     local combat_time_per_stack = {}
+    for i = 1, max_stacks do
+        combat_time_per_stack[i] = 0
+    end
+
     if buff_events and mission.combats then
         local current_stack = 0
         local last_time = nil
