@@ -1,7 +1,6 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
-local UIFonts = require("scripts/managers/ui/ui_fonts")
-local UIRenderer = require("scripts/managers/ui/ui_renderer")
+local ui_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/ui")
 
 local tooltip_scene = {
     horizontal_alignment = "left",
@@ -230,7 +229,7 @@ function resize_tooltip(self, widget, ui_renderer)
 
     dummy_tooltip_text_size[1] = widget_width + text_size_addition[1]
 
-    local title_height = get_text_height(ui_renderer, content.title, style.title, dummy_tooltip_text_size)
+    local title_height = ui_lib.get_text_height(ui_renderer, content.title, style.title, dummy_tooltip_text_size)
 
     style.title.offset[2] = text_vertical_offset
     style.title.size[2] = title_height
@@ -246,12 +245,6 @@ function resize_tooltip(self, widget, ui_renderer)
 
     self:_set_scenegraph_size(widget.scenegraph_id, nil, text_vertical_offset, self._ui_overlay_scenegraph)
 
-end
-
-function get_text_height(ui_renderer, text, text_style, optional_text_size)
-    local text_options = UIFonts.get_font_options_by_style(text_style)
-    local text_height = UIRenderer.text_height(ui_renderer, text, text_style.font_type, text_style.font_size, optional_text_size or text_style.size, text_options)
-    return text_height
 end
 
 return {
