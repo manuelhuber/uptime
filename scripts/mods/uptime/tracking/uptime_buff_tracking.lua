@@ -129,20 +129,27 @@ function update_buff(buffs, buff_instance, now)
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
         local template = buff_instance:template()
+
+        -- some buffs have dynamic max values https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/stepped_stat_buff.lua#L40-L47
+        local min_max_step_func = template.min_max_step_func
+        local max = buff_instance:max_stacks()
+        if min_max_step_func then
+            local template_data = buff_instance._template_data
+            local template_context = buff_instance._template_context
+            _, max = min_max_step_func(template_data, template_context)
+        end
+
         buffs[buff_title] = {
             icon = buff_instance:_hud_icon(),
             gradient_map = buff_instance:hud_icon_gradient_map(),
             stackable = (buff_instance:max_stacks() or 0) > 1,
-            max_stacks = buff_instance:max_stacks() or 1,
+            max_stacks = max or 1,
             events = {},
             is_active = true,
             current_stack_count = stack_count,
             category = template.buff_category,
             related_talents = template.related_talents,
             source_item_name = item_name,
-            --source_item_id = ((buff_instance._template_context or {}).source_item or {}).__gear_id,
-            --source_item = ((buff_instance._template_context or {}).source_item or nil),
-            --instance = buff_instance,
         }
 
         -- Record an add event
@@ -164,14 +171,11 @@ function update_buff(buffs, buff_instance, now)
         })
         -- If stack count changed, record a stack change event
     elseif buffs[buff_title].current_stack_count ~= stack_count then
-        -- Record a stack change event
         table.insert(buffs[buff_title].events, {
             type = "stack_change",
             time = now,
             stack_count = stack_count
         })
-
-        -- Update current stack count
         buffs[buff_title].current_stack_count = stack_count
     end
 
