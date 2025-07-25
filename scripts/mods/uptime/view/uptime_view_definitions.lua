@@ -14,7 +14,7 @@ local scenegraph_definition = {
         parent = "screen",
         vertical_alignment = "center",
         horizontal_alignment = "center",
-        position = { 0, 0, base_z }
+        position = { 200, 0, base_z }
     },
     [row_scene_graph_id] = {
         parent = "container",
