@@ -48,6 +48,11 @@ local data_columns = {
         end
     },
 }
+local width = ROW_HEIGHT
+for _, col in pairs(data_columns) do
+    width = width + col.width
+end
+
 local ICON_PADDING = 8
 local ICON_SIZE = ROW_HEIGHT - ICON_PADDING
 local row_pass_template = {
@@ -63,7 +68,6 @@ local row_pass_template = {
             offset = {
                 ICON_PADDING, ICON_PADDING / 2, 0
             },
-            --vertical_alignment = "center",
             material_values = {}
         }
     }, {
@@ -191,6 +195,7 @@ function create_row_widget_v1(buff, index, _create_widget)
 end
 
 return {
+    width = width,
     row_height = ROW_HEIGHT,
     create_header_row = create_header_row_widget_v1,
     create_row = create_row_widget_v1

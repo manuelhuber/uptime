@@ -43,7 +43,14 @@ function UptimeView:create_rows(buffs)
         end
         index = index + 1
     end
-    --self:_set_scenegraph_size("container", 400,200)
+
+    local horizontal_margins_for_border = 75
+    local final_width = renderer.width + horizontal_margins_for_border
+
+    local vertical_margins_for_border = 225
+    local final_height = index * renderer.row_height + vertical_margins_for_border
+
+    self:_set_scenegraph_size("container", final_width, final_height)
 end
 
 function UptimeView:update(...)

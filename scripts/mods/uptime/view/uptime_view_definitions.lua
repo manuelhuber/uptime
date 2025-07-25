@@ -11,18 +11,16 @@ local row_scene_graph_id = "uptime_rows"
 local scenegraph_definition = {
     screen = UIWorkspaceSettings.screen,
     container = {
-        vertical_alignment = "center",
         parent = "screen",
-        horizontal_alignment = "right",
-        size = { size[1], size[2] },
+        vertical_alignment = "center",
+        horizontal_alignment = "center",
         position = { 0, 0, base_z }
     },
     [row_scene_graph_id] = {
-        vertical_alignment = "top",
         parent = "container",
-        horizontal_alignment = "center",
-        size = { size[1], size[2] - 100 },
-        position = { 30, 90, base_z + 1 }
+        vertical_alignment = "top",
+        horizontal_alignment = "left",
+        position = { 25, 100, base_z + 1 }
     },
     tooltip = tooltip_definition.scene
 }
