@@ -486,12 +486,6 @@ UptimeHistoryView.update = function(self, dt, t, input_service, view_data)
     -- Update entry widgets
     self:_update_entry_content_widgets(dt, t)
 
-    -- Hide tooltip if widget is no longer hovered
-    if self._tooltip_data and self._tooltip_data.widget and not self._tooltip_data.widget.content.hotspot.is_hover then
-        self._tooltip_data = {}
-        self._widgets_by_name.tooltip.content.visible = false
-    end
-
     -- Call parent update
     return UptimeHistoryView.super.update(self, dt, t, input_service)
 end
@@ -614,94 +608,6 @@ UptimeHistoryView._set_scenegraph_size = function(self, scenegraph_id, size)
     end
 end
 
--- Set tooltip data for a widget
-UptimeHistoryView._set_tooltip_data = function(self, widget)
-    local tooltip_widget = self._widgets_by_name.tooltip
-    local entry = widget.content.entry
-
-    -- Get tooltip text based on entry properties
-    local tooltip_text = self:_get_tooltip_text(entry)
-
-    -- Only proceed if we have tooltip text
-    if tooltip_text == "" then
-        return
-    end
-
-    -- Set tooltip text
-    local content = tooltip_widget.content
-    content.text = tooltip_text
-
-    -- Calculate tooltip size based on text dimensions
-    local size = self:_calculate_tooltip_size(tooltip_text)
-
-    -- Calculate tooltip position
-    local position = {
-        widget.offset[1] + widget.content.hotspot.anim_hover_progress * 10,
-        widget.offset[2]
-    }
-
-    -- Update tooltip position and size
-    self:_set_scenegraph_position("tooltip", position)
-    self:_set_scenegraph_size("tooltip", size)
-
-    -- Show tooltip
-    tooltip_widget.content.visible = true
-    self._tooltip_data = {
-        widget = widget
-    }
-end
-
--- Get tooltip text based on entry properties
-UptimeHistoryView._get_tooltip_text = function(self, entry)
-    if not entry then
-        return ""
-    end
-
-    -- Use tooltip text if available
-    if entry.tooltip_text then
-        return Managers.localization:localize(entry.tooltip_text)
-    end
-
-    -- Show disabled by information if available
-    if entry.disabled_by and not table.is_empty(entry.disabled_by) then
-        local tooltip_text = "Disabled by: "
-
-        for i, disabled_by in ipairs(entry.disabled_by) do
-            if i > 1 then
-                tooltip_text = tooltip_text .. ", "
-            end
-
-            tooltip_text = tooltip_text .. Managers.localization:localize(disabled_by)
-        end
-
-        return tooltip_text
-    end
-
-    return ""
-end
-
--- Calculate tooltip size based on text dimensions
-UptimeHistoryView._calculate_tooltip_size = function(self, tooltip_text)
-    local tooltip_widget = self._widgets_by_name.tooltip
-    local style = tooltip_widget.style
-    local ui_renderer = self._ui_renderer
-    local text_style = style.text
-
-    -- Measure text size
-    UIRenderer.begin_pass(ui_renderer, self._ui_scenegraph, nil, 0, nil)
-    local min, max = UIRenderer.text_size(ui_renderer, tooltip_text, text_style.font_type, text_style.font_size)
-    UIRenderer.end_pass(ui_renderer)
-
-    -- Calculate dimensions with padding
-    local text_width = max[1] - min[1]
-    local text_height = max[3] - min[3]
-
-    return {
-        text_width + 40,
-        text_height + 40
-    }
-end
-
 -- Main draw function for the view
 UptimeHistoryView.draw = function(self, dt, t, input_service, layer)
     -- Draw main UI elements
@@ -755,27 +661,7 @@ UptimeHistoryView._draw_grid = function(self, grid, widgets, interaction_widget,
             if self._selected_settings_widget then
                 ui_renderer.input_service = null_input_service
             end
-
-            -- Only draw visible widgets
             if grid:is_widget_visible(widget) then
-                local hotspot = widget.content.hotspot
-
-                if hotspot then
-                    -- Disable hotspot if grid is not hovered
-                    hotspot.force_disabled = not is_grid_hovered
-
-                    -- Check if widget is active (focused or hovered)
-                    local is_active = hotspot.is_focused or hotspot.is_hover
-
-                    -- Show tooltip for active widgets with tooltip data
-                    if is_active and widget.content.entry and
-                            (widget.content.entry.tooltip_text or
-                                    (widget.content.entry.disabled_by and not table.is_empty(widget.content.entry.disabled_by))) then
-                        self:_set_tooltip_data(widget)
-                    end
-                end
-
-                -- Draw the widget
                 UIWidget.draw(widget, ui_renderer)
             end
         end

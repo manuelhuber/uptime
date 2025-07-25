@@ -32,38 +32,12 @@ local mask_size = {
     grid_width + grid_blur_edge_size[1] * 2,
     grid_height + grid_blur_edge_size[2] * 2
 }
-local mask_offset_y = 16
-local settings_mask_size = {
-    1080 + grid_blur_edge_size[1] * 2,
-    grid_height + grid_blur_edge_size[2]
-}
-
-local settings_grid_height = grid_height + mask_offset_y
-
--- ===== Style Definitions =====
--- Tooltip text style
-local tooltip_text_style = table.clone(UIFontSettings.body)
-tooltip_text_style.text_horizontal_alignment = "left"
-tooltip_text_style.text_vertical_alignment = "center"
-tooltip_text_style.horizontal_alignment = "left"
-tooltip_text_style.vertical_alignment = "center"
-tooltip_text_style.color = Color.white(255, true)
-tooltip_text_style.offset = { 0, 0, 2 }
 
 -- ===== Scenegraph Definition =====
 -- Defines the layout and positioning of UI elements
 local scenegraph_definition = {
     -- Root screen element
     screen = UIWorkspaceSettings.screen,
-
-    -- Tooltip container
-    tooltip = {
-        vertical_alignment = "top",
-        parent = "screen",
-        horizontal_alignment = "left",
-        size = { 0, 0 },
-        position = { 0, 0, 200 }
-    },
 
     -- Main background
     background = {
@@ -211,43 +185,6 @@ local widget_definitions = {
             }
         }
     }, "background_icon"),
-
-    -- Tooltip (appears when hovering over items)
-    tooltip = UIWidget.create_definition({
-        -- Outer border
-        {
-            pass_type = "rect",
-            style = {
-                vertical_alignment = "center",
-                horizontal_alignment = "center",
-                offset = { 0, 0, 0 },
-                color = Color.ui_terminal(255, true),
-                size_addition = { 23, 23 }
-            }
-        },
-        -- Inner background
-        {
-            pass_type = "rect",
-            style = {
-                vertical_alignment = "center",
-                horizontal_alignment = "center",
-                offset = { 0, 0, 1 },
-                color = Color.black(255, true),
-                size_addition = { 20, 20 }
-            }
-        },
-        -- Tooltip text
-        {
-            value_id = "text",
-            style_id = "text",
-            pass_type = "text",
-            value = "",
-            style = tooltip_text_style
-        }
-    }, "tooltip", {
-        visible = false
-    }),
-
     -- Scrollbar
     scrollbar = UIWidget.create_definition(ScrollbarPassTemplates.default_scrollbar, "scrollbar"),
 
