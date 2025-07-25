@@ -6,7 +6,7 @@ local tooltip_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/toolti
 
 local base_z = 100
 local size = { 1000, 900 }
-local row_scene_graph = "uptime_rows"
+local row_scene_graph_id = "uptime_rows"
 
 local scenegraph_definition = {
     screen = UIWorkspaceSettings.screen,
@@ -17,7 +17,7 @@ local scenegraph_definition = {
         size = { size[1], size[2] },
         position = { 0, 0, base_z }
     },
-    [row_scene_graph] = {
+    [row_scene_graph_id] = {
         vertical_alignment = "top",
         parent = "container",
         horizontal_alignment = "center",
@@ -45,21 +45,7 @@ local UptimeViewDefinitions = {
     legend_inputs = legend_inputs,
     widget_definitions = widget_definitions,
     scenegraph_definition = scenegraph_definition,
-
-    row_scene_graph = row_scene_graph,
-    row_pass_template = {
-        {
-            value_id = "text",
-            style_id = "text",
-            pass_type = "text",
-            style = {
-                line_spacing = 1.2,
-                font_size = 30,
-                drop_shadow = true,
-                font_type = "machine_medium",
-            },
-        }
-    }
+    row_scene_graph_id = row_scene_graph_id,
 }
 
 return settings("UptimeViewDefinitions", UptimeViewDefinitions)

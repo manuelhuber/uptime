@@ -1,6 +1,7 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
-local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
+local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_definitions")
+
 local ROW_HEIGHT = 30
 
 local is_stackable = function(buff)
@@ -34,16 +35,9 @@ local columns = {
     }, {
         id = "talent_name",
         display_name = "loc_talent_header",
-        width = 200,
+        width = 600,
         accessor = function(buff)
-            if buff.talents then
-                local talent_id = buff.talents[1]
-                local talent = get_talent(talent_id)
-                if talent then
-                    return Managers.localization:localize(talent.display_name)
-                end
-            end
-            return ""
+            return string.sub(buff.icon, 10, -1)
         end
     }
 }
@@ -94,7 +88,7 @@ for _, column in pairs(columns) do
     offset = offset + column.width
 end
 
-local row_widget_def = UIWidget.create_definition(pass_template, "uptime_rows")
+local row_widget_def = UIWidget.create_definition(pass_template, Definitions.row_scene_graph_id)
 
 function create_header_row_widget_v1(_create_widget)
     local widget = _create_widget("header_row", row_widget_def)
