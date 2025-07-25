@@ -191,19 +191,15 @@ end
 -- Calculate time spent at each stack level
 function calculate_time_per_stack(buff_events, max_stacks)
     local time_per_stack = {}
-    for i = 1, max_stacks do
-        time_per_stack[i] = 0
-    end
-
     if buff_events then
         local current_stack = 0
         local last_time = nil
 
         for _, event in ipairs(buff_events) do
             -- If we have a previous event, calculate time at that stack level
-            if last_time and current_stack > 0 and current_stack <= max_stacks then
+            if last_time and current_stack > 0 then
                 local duration = event.time - last_time
-                time_per_stack[current_stack] = time_per_stack[current_stack] + duration
+                time_per_stack[current_stack] = (time_per_stack[current_stack] or 0) + duration
             end
 
             -- Update stack count and time for next calculation
@@ -222,17 +218,13 @@ end
 
 function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
     local combat_time_per_stack = {}
-    for i = 1, max_stacks do
-        combat_time_per_stack[i] = 0
-    end
-
     if buff_events and mission.combats then
         local current_stack = 0
         local last_time = nil
 
         for _, event in ipairs(buff_events) do
             -- If we have a previous event and valid stack, calculate combat time for that stack
-            if last_time and current_stack > 0 and current_stack <= max_stacks then
+            if last_time and current_stack > 0 then
                 -- For each period between events, check overlap with combat
                 for _, combat in ipairs(mission.combats) do
                     local period_start = last_time
@@ -242,7 +234,7 @@ function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
                     local overlap_end = math.min(period_end, combat.end_time)
 
                     if overlap_end > overlap_start then
-                        combat_time_per_stack[current_stack] = combat_time_per_stack[current_stack] + (overlap_end - overlap_start)
+                        combat_time_per_stack[current_stack] = (combat_time_per_stack[current_stack] or 0) + (overlap_end - overlap_start)
                     end
                 end
             end
