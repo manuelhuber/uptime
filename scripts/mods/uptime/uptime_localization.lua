@@ -91,4 +91,8 @@ return {
     loc_average_stacks_combat_header = {
         en = "Average stack (combat)"
     },
+
+    loc_unknown_blessing = {
+        en = "Unkown blessing"
+    }
 }

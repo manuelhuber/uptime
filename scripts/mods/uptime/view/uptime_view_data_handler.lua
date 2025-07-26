@@ -290,8 +290,12 @@ function generate_tooltip(buff)
         title = Localize(talent.display_name)
         description = TalentLayoutParser.talent_description(talent, 1, Color.ui_terminal(255, true))
     elseif item then
-        title = item.name .. "\n" .. item.blessing.name or "Unkown blessing"
-        description = item.blessing.description or "Unkown blessing"
+        title = item.name
+        description = ""
+        if item.blessing then
+            title = title .. "\n" .. item.blessing.name or ""
+            description = item.blessing.description or Localize("loc_unknown_blessing")
+        end
     else
         return nil
     end
