@@ -95,8 +95,10 @@ mod.save_entry = function(self, entry)
     -- Open file
     local file = assert(_io.open(path, "w+"))
 
-    entry.uff = nil
-    mod.debug_entry = entry
+    for _, buff in pairs(entry.buffs) do
+        -- this field is just for debuggin, don't save it
+        buff.instance = nil
+    end
 
     local entry_json = json.encode(entry)
     file:write(entry_json)
