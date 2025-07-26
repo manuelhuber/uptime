@@ -1,7 +1,7 @@
 local mod = get_mod("uptime")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
-function get_widget(uptime_view, scene_graph_id, width, height, combats_segments, mission_length)
+function get_widget(uptime_view, scene_graph_id, width, height, segments, mission_length)
     local template = {
         {
             pass_type = "rect",
@@ -11,7 +11,7 @@ function get_widget(uptime_view, scene_graph_id, width, height, combats_segments
             },
         } }
 
-    for _, segment in pairs(combats_segments) do
+    for _, segment in pairs(segments) do
         local start = segment.start_time
         local endtime = segment.end_time
         local segment_width = ((endtime - start) / mission_length) * width
