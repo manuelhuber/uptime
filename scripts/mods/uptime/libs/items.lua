@@ -17,12 +17,8 @@ function get_blessing_name(trait)
 end
 function get_blessing_description(trait)
     if trait then
-        local trait_id = trait.id
-        local trait_item = MasterItems.get_item(trait_id)
-        mod.debug_trait_item = trait_item
-        local desc = ItemUtils.trait_description(trait_item, trait.rarity or 4, 0)
-        -- local desc2 = Localize(trait_item.description, true, {power_level=1,time=2,stacks=3})
-        return desc
+        local trait_item = MasterItems.get_item(trait.id)
+        return ItemUtils.trait_description(trait_item, trait.rarity or 4, 0)
     end
 end
 
