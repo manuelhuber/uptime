@@ -41,7 +41,7 @@ end
 
 mod:hook_safe(CLASS.AttackReportManager, "add_attack_result", function(func, self, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage,
                                                                        attack_result, attack_type, damage_efficiency, ...)
-    if player_from_unit(attacking_unit) or player_from_unit(attacked_unit) then
+    if is_local_player(attacking_unit) or is_local_player(attacked_unit) then
         local now = mod:now()
         local combats = mod.mission_tracking.combats
         local combat_duration = 10 -- Duration to extend combat in seconds
@@ -69,7 +69,7 @@ mod:hook_safe(CLASS.AttackReportManager, "add_attack_result", function(func, sel
     end
 end)
 
-function player_from_unit(unit)
+function is_local_player(unit)
     local player = Managers.player:local_player(1)
     return unit == player.player_unit
 end
