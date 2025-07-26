@@ -173,7 +173,6 @@ function init_buff(buff_instance)
     end
 
     local child_buff_template = template.child_buff_template
-    mod:echo(child_buff_template)
     local child_template = BuffTemplates[child_buff_template]
     if child_template then
         -- https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/parent_proc_buff.lua#L15
