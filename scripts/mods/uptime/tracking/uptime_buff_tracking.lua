@@ -3,7 +3,7 @@ local item_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/items")
 local BuffTemplates = mod:original_require("scripts/settings/buff/buff_templates")
 local WeaponTraitTemplates = mod:original_require("scripts/settings/equipment/weapon_traits/weapon_trait_templates")
 local MasterItems = mod:original_require("scripts/backend/master_items")
-
+local TalentSettings = mod:original_require("scripts/settings/talent/talent_settings")
 --[[
     Buff Event Tracking Data Model
     
@@ -125,6 +125,10 @@ function update_buff(buffs, buff_instance, now)
 
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
+        if buff_title == "psyker_overcharge_stance" then
+            mod:echo("GOT IT")
+            mod.debug_gaze = buff_instance
+        end
         buffs[buff_title] = init_buff(buff_instance)
         -- Record an add event
         table.insert(buffs[buff_title].events, {
@@ -179,6 +183,10 @@ end
 function get_actual_max(buff_instance)
     local max_stacks = buff_instance:max_stacks()
     local template = buff_instance:template()
+
+    if (buff_instance:title() == "psyker_overcharge_stance") then
+        return TalentSettings.overcharge_stance.max_stacks
+    end
 
     -- some buffs have dynamic max values https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/stepped_stat_buff.lua#L40-L47
     local min_max_step_func = template.min_max_step_func
