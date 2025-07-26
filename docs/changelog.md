@@ -11,10 +11,9 @@
 
 ## Minor:
 
-- Added support for max stacks for Scrier's Gaze (both the initial and lingering buff)
+- Added custom handling for max stacks for some unique talents (e.g. Scrier's Gaze)
 - Fixed bug order (sometimes they wouldn't be shown in correct descending order)
 - Various minor style tweaks
-
 
 # V1.0
 
