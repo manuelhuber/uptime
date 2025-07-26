@@ -146,7 +146,7 @@ local colors = {
 }
 
 function add_columns(pass_template, column_definitions, background_colors, row_height)
-    local offset = 35
+    local offset = ICON_SIZE
     local alternate = true
     local padding = 12
     local half_padding = padding / 2
@@ -229,7 +229,7 @@ function create_row_widget_v1(uptime_view, buff, index)
     local top_offset = (index * ROW_HEIGHT)
 
     local additional_widgets = {}
-    local total_width = ROW_HEIGHT
+    local total_width = ICON_SIZE
     for _, column in pairs(columns) do
         widget.content[column.id] = ""
         if not column.condition or column.condition(buff) then
