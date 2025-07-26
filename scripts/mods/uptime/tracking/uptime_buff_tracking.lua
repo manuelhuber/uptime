@@ -207,10 +207,16 @@ function get_actual_max(buff_instance)
 end
 
 function get_optional_item_info(buff_instance)
-    local item = (buff_instance._template_context or {}).source_item
+    local context = (buff_instance._template_context or {})
+    local item = context.source_item or context.item
     if not item then
+        mod.buffs_without_item = mod.buffs_without_item or {}
+        mod.buffs_without_item[#mod.buffs_without_item + 1] = buff_instance
         return nil
     end
+    mod:echo("have item for buff " .. buff_instance:title())
+    mod.buffs_with_item = mod.buffs_with_item or {}
+    mod.buffs_with_item[#mod.buffs_with_item + 1] = buff_instance
     local blessing
     for _, trait in pairs(item.traits) do
         local trait_item = MasterItems.get_item(trait.id)
