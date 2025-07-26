@@ -8,8 +8,18 @@ local package_manager = mod:io_dofile("uptime/scripts/mods/uptime/uptime_package
 
 local UptimeView = class("UptimeView", "BaseView")
 
+local show_mission_overview = false
+
 function UptimeView:init(settings, context)
     self._definitions = Definitions
+    local mission_secene = self._definitions.mission_section_scene_graph_id
+    local row_scene = self._definitions.row_scene_graph_id
+    if not show_mission_overview then
+        local mission_height = self._definitions.scenegraph_definition[mission_secene].size[2]
+        self._definitions.scenegraph_definition[mission_secene].size[2] = 0
+        self._definitions.scenegraph_definition[row_scene].position[2] = self._definitions.scenegraph_definition[row_scene].position[2] - mission_height
+    end
+    self._mission_scene = self._definitions.scenegraph_definition[mission_secene]
     self.display_values = mod:generate_display_values(context.entry)
     self._widgets, self._widgets_by_name = {}, {}
     UptimeView.super.init(self, self._definitions, settings)
@@ -18,7 +28,9 @@ end
 
 function UptimeView:on_enter()
     self:for_all_icons(package_manager.load_resource)
-    self:create_mission_section(self.display_values.mission)
+    if show_mission_overview then
+        self:create_mission_section(self.display_values.mission)
+    end
     self:create_rows(self.display_values.buffs)
     UptimeView.super.on_enter(self)
 end
@@ -68,8 +80,10 @@ function UptimeView:create_rows(buffs)
     local horizontal_margins_for_border = 75
     local final_width = renderer.get_width() + horizontal_margins_for_border
 
-    local vertical_margins_for_border = 325
-    local final_height = index * renderer.row_height + vertical_margins_for_border
+    local vertical_margins_for_border = 250
+    local rows_height = index * renderer.row_height
+    local mission_height = self._mission_scene and self._mission_scene.size[2] or 0
+    local final_height = rows_height + mission_height + vertical_margins_for_border
 
     self:_set_scenegraph_size("container", final_width, final_height)
 end
