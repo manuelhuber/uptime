@@ -281,18 +281,22 @@ end
 
 function generate_tooltip(buff)
     local title, description
-    if buff.talents then
-        local talent = get_talent(buff.talents[1])
+
+    local talents = buff.related_talents
+    local item = buff.related_item
+    if talents then
+        -- even though it's an array buffs only have 1 talent
+        local talent = get_talent(talents[1])
         title = Localize(talent.display_name)
         description = TalentLayoutParser.talent_description(talent, 1, Color.ui_terminal(255, true))
-    elseif buff.item then
-        title = buff.item.name .. "\n" .. buff.item.blessing.name or "Unkown blessing"
-        description = buff.item.blessing.description or "Unkown blessing"
+    elseif item then
+        title = item.name .. "\n" .. item.blessing.name or "Unkown blessing"
+        description = item.blessing.description or "Unkown blessing"
     else
         return nil
     end
     return {
-        title = "",
-        description = ""
+        title = title,
+        description = description
     }
 end
