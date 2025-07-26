@@ -70,7 +70,7 @@ function UptimeView:create_rows(buffs)
     local horizontal_margins_for_border = 75
     local final_width = renderer.get_width() + horizontal_margins_for_border
 
-    local vertical_margins_for_border = 225
+    local vertical_margins_for_border = 325
     local final_height = index * renderer.row_height + vertical_margins_for_border
 
     self:_set_scenegraph_size("container", final_width, final_height)
