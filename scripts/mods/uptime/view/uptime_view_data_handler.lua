@@ -1,5 +1,8 @@
 local mod = get_mod("uptime")
 
+local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
+local TalentLayoutParser = mod:original_require("scripts/ui/views/talent_builder_view/utilities/talent_layout_parser")
+
 function mod:generate_display_values(entry)
     local mission = entry.mission
     local mission_display_values = generate_display_values_for_mission(mission)
@@ -67,16 +70,8 @@ function generate_display_values_for_buff(mission, buff)
 
     -- Calculate combat time per stack
     local combat_time_per_stack = calculate_combat_time_per_stack(buff.events, mission, max_stacks)
-    local combat_percentage_per_stack = calculate_combat_percentage_per_stack(combat_time_per_stack, combat_time)
 
-    -- Calculate time at max stack
-    local time_at_max_stack = time_per_stack[max_stacks] or 0
     local combat_time_at_max_stack = combat_time_per_stack[max_stacks] or 0
-    local combat_percentage_at_max_stack = combat_time_at_max_stack / uptime_combat * 100
-
-    -- Calculate average stacks
-    local average_stacks = calculate_average_stacks(time_per_stack, total_uptime, max_stacks)
-    local average_stacks_combat = calculate_average_stacks(combat_time_per_stack, uptime_combat, max_stacks)
 
     return {
         uptime = total_uptime,
@@ -89,19 +84,19 @@ function generate_display_values_for_buff(mission, buff)
 
         time_per_stack = time_per_stack,
         combat_time_per_stack = combat_time_per_stack,
-        combat_percentage_per_stack = combat_percentage_per_stack,
+        combat_percentage_per_stack = calculate_combat_percentage_per_stack(combat_time_per_stack, combat_time),
 
-        time_at_max_stack = time_at_max_stack,
+        time_at_max_stack = time_per_stack[max_stacks] or 0,
         combat_time_at_max_stack = combat_time_at_max_stack,
-        combat_percentage_at_max_stack = combat_percentage_at_max_stack,
+        combat_percentage_at_max_stack = combat_time_at_max_stack / uptime_combat * 100,
 
-        average_stacks = average_stacks,
-        average_stacks_combat = average_stacks_combat,
+        average_stacks = calculate_average_stacks(time_per_stack, total_uptime, max_stacks),
+        average_stacks_combat = calculate_average_stacks(combat_time_per_stack, uptime_combat, max_stacks),
 
         icon = buff.icon,
         gradient_map = buff.gradient_map,
 
-        talents = buff.related_talents
+        tooltip = generate_tooltip(buff)
     }
 end
 
@@ -282,4 +277,22 @@ function calculate_average_stacks(time_per_stack, total_uptime, max_stacks)
     end
 
     return average_stacks
+end
+
+function generate_tooltip(buff)
+    local title, description
+    if buff.talents then
+        local talent = get_talent(buff.talents[1])
+        title = Localize(talent.display_name)
+        description = TalentLayoutParser.talent_description(talent, 1, Color.ui_terminal(255, true))
+    elseif buff.item then
+        title = buff.item.name .. "\n" .. buff.item.blessing.name or "Unkown blessing"
+        description = buff.item.blessing.description or "Unkown blessing"
+    else
+        return nil
+    end
+    return {
+        title = "",
+        description = ""
+    }
 end

@@ -2,9 +2,7 @@ local mod = get_mod("uptime")
 local renderer = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_row_v1")
 local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_definitions")
 mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_data_handler")
-local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
 local tooltip_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/tooltip_definition")
-local TalentLayoutParser = mod:original_require("scripts/ui/views/talent_builder_view/utilities/talent_layout_parser")
 local get_timeline_widget = mod:io_dofile("uptime/scripts/mods/uptime/view/timeline_widget")
 local package_manager = mod:io_dofile("uptime/scripts/mods/uptime/uptime_package_manager")
 
@@ -79,32 +77,26 @@ end
 function UptimeView:update(...)
     local show_tooltip = false
     for _, widget in pairs(self._widgets) do
-        if (widget.content.hotspot or {}).is_hover and widget.buff and widget.buff.talents then
+        if (widget.content.hotspot or {}).is_hover and widget.buff and widget.buff.tooltip then
             show_tooltip = true
             self:setup_tooltip(widget.buff, widget)
         end
     end
-    if not show_tooltip then
-        local tooltip = self._widgets_by_name.tooltip
-        tooltip.visible = false
-    end
+    local tooltip = self._widgets_by_name.tooltip
+    tooltip.visible = show_tooltip
     return UptimeView.super.update(self, ...)
 end
 
 function UptimeView:setup_tooltip(buff, hovered_widget)
     local widget = self._widgets_by_name.tooltip
-    widget.visible = true
     local content = widget.content
-    if buff.talents then
-        local talent = get_talent(buff.talents[1])
-        content.title = Managers.localization:localize(talent.display_name)
-        content.description = TalentLayoutParser.talent_description(talent, 1, Color.ui_terminal(255, true))
-    end
+    content.title = buff.tooltip.title
+    content.description = buff.tooltip.description
     tooltip_definition.resize_tooltip(self, widget, self._ui_renderer)
-
     local tooltip_offset = widget.offset
     tooltip_offset[1] = hovered_widget.offset[1]
     tooltip_offset[2] = hovered_widget.offset[2]
+    return true
 end
 
 return UptimeView
