@@ -1,6 +1,8 @@
 local mod = get_mod("uptime")
 local item_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/items")
 local BuffTemplates = mod:original_require("scripts/settings/buff/buff_templates")
+local WeaponTraitTemplates = mod:original_require("scripts/settings/equipment/weapon_traits/weapon_trait_templates")
+local MasterItems = mod:original_require("scripts/backend/master_items")
 
 --[[
     Buff Event Tracking Data Model
@@ -121,12 +123,6 @@ function update_buff(buffs, buff_instance, now)
     local buff_title = buff_instance:title()
     local stack_count = buff_instance:visual_stack_count()
 
-    local item_name = nil
-    if (buff_instance._template_context or {}).source_item then
-        local item = buff_instance._template_context.source_item
-        item_name = item_lib.get_name(item)
-    end
-
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
         buffs[buff_title] = init_buff(buff_instance)
@@ -163,9 +159,29 @@ end
 function init_buff(buff_instance)
     local template = buff_instance:template()
 
+    local max_stacks = get_actual_max(buff_instance)
+
+    return {
+        icon = buff_instance:_hud_icon(),
+        gradient_map = buff_instance:hud_icon_gradient_map(),
+        stackable = max_stacks > 1,
+        max_stacks = max_stacks,
+        events = {},
+        is_active = true,
+        current_stack_count = stack_count,
+        category = template.buff_category,
+        related_talents = template.related_talents,
+        related_item = get_optional_item_info(buff_instance),
+        instance = buff_instance
+    }
+end
+
+function get_actual_max(buff_instance)
+    local max_stacks = buff_instance:max_stacks()
+    local template = buff_instance:template()
+
     -- some buffs have dynamic max values https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/stepped_stat_buff.lua#L40-L47
     local min_max_step_func = template.min_max_step_func
-    local max_stacks = buff_instance:max_stacks()
     if min_max_step_func then
         local template_data = buff_instance._template_data
         local template_context = buff_instance._template_context
@@ -179,21 +195,43 @@ function init_buff(buff_instance)
         max_stacks = (buff_instance._template_override_data.max_stacks or child_template.max_stacks or 1 or 1)
     end
 
-    max_stacks = max_stacks or 1
+    return max_stacks or 1
+end
 
+function get_optional_item_info(buff_instance)
+    local item = (buff_instance._template_context or {}).source_item
+    if not item then
+        return nil
+    end
+    local blessing
+    for _, trait in pairs(item.traits) do
+        local trait_item = MasterItems.get_item(trait.id)
+        local trait_name = trait_item.trait
+        local trait_definition = WeaponTraitTemplates[trait_name]
+        if trait_definition and trait_belongs_to_buff(trait_definition, buff_instance:title()) then
+            blessing = {
+                name = item_lib.get_blessing_name(trait),
+                description = item_lib.get_blessing_description(trait)
+            }
+        end
+    end
     return {
-        icon = buff_instance:_hud_icon(),
-        gradient_map = buff_instance:hud_icon_gradient_map(),
-        stackable = max_stacks > 1,
-        max_stacks = max_stacks,
-        events = {},
-        is_active = true,
-        current_stack_count = stack_count,
-        category = template.buff_category,
-        related_talents = template.related_talents,
-        source_item_name = item_name,
-        --instance = buff_instance
+        name = item_lib.get_name(item),
+        blessing = blessing
     }
+end
+
+function trait_belongs_to_buff(trait_definition, buff_title)
+    -- data structure reference:
+    -- https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/settings/equipment/weapon_traits/weapon_traits_bespoke_ogryn_combatblade_p1.lua#L66
+    for _, entry in pairs(trait_definition.format_values) do
+        if entry.find_value then
+            if entry.find_value.buff_template_name == buff_title then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 function mod:finalize_tracking(tracking_end_time)
