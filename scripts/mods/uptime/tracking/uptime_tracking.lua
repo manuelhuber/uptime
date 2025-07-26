@@ -38,6 +38,5 @@ function mod:try_end_tracking()
         },
     }
     mod:save_entry(entry)
-    mod:echo("Tracking ended.")
     return true
 end

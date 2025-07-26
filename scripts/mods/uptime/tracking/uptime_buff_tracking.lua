@@ -125,10 +125,6 @@ function update_buff(buffs, buff_instance, now)
 
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
-        if buff_title == "psyker_overcharge_stance" then
-            mod:echo("GOT IT")
-            mod.debug_gaze = buff_instance
-        end
         buffs[buff_title] = init_buff(buff_instance)
         -- Record an add event
         table.insert(buffs[buff_title].events, {
@@ -214,7 +210,6 @@ function get_optional_item_info(buff_instance)
         mod.buffs_without_item[#mod.buffs_without_item + 1] = buff_instance
         return nil
     end
-    mod:echo("have item for buff " .. buff_instance:title())
     mod.buffs_with_item = mod.buffs_with_item or {}
     mod.buffs_with_item[#mod.buffs_with_item + 1] = buff_instance
     local blessing
