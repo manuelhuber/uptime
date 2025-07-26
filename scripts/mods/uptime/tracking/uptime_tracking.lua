@@ -1,6 +1,7 @@
 local mod = get_mod("uptime")
 mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_buff_tracking")
 mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_mission_tracking")
+mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_override_hud_logic")
 
 mod.mission_params = nil
 
