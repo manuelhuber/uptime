@@ -1,5 +1,6 @@
 local mod = get_mod("uptime")
 local item_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/items")
+local BuffTemplates = mod:original_require("scripts/settings/buff/buff_templates")
 
 --[[
     Buff Event Tracking Data Model
@@ -118,7 +119,7 @@ end
 
 function update_buff(buffs, buff_instance, now)
     local buff_title = buff_instance:title()
-    local stack_count = buff_instance:stat_buff_stacking_count()
+    local stack_count = buff_instance:visual_stack_count()
 
     local item_name = nil
     if (buff_instance._template_context or {}).source_item then
@@ -128,30 +129,7 @@ function update_buff(buffs, buff_instance, now)
 
     -- Initialize buff data if it doesn't exist
     if not buffs[buff_title] then
-        local template = buff_instance:template()
-
-        -- some buffs have dynamic max values https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/stepped_stat_buff.lua#L40-L47
-        local min_max_step_func = template.min_max_step_func
-        local max = buff_instance:max_stacks()
-        if min_max_step_func then
-            local template_data = buff_instance._template_data
-            local template_context = buff_instance._template_context
-            _, max = min_max_step_func(template_data, template_context)
-        end
-
-        buffs[buff_title] = {
-            icon = buff_instance:_hud_icon(),
-            gradient_map = buff_instance:hud_icon_gradient_map(),
-            stackable = (buff_instance:max_stacks() or 0) > 1,
-            max_stacks = max or 1,
-            events = {},
-            is_active = true,
-            current_stack_count = stack_count,
-            category = template.buff_category,
-            related_talents = template.related_talents,
-            source_item_name = item_name,
-        }
-
+        buffs[buff_title] = init_buff(buff_instance)
         -- Record an add event
         table.insert(buffs[buff_title].events, {
             type = "add",
@@ -180,6 +158,43 @@ function update_buff(buffs, buff_instance, now)
     end
 
     return true
+end
+
+function init_buff(buff_instance)
+    local template = buff_instance:template()
+
+    -- some buffs have dynamic max values https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/stepped_stat_buff.lua#L40-L47
+    local min_max_step_func = template.min_max_step_func
+    local max_stacks = buff_instance:max_stacks()
+    if min_max_step_func then
+        local template_data = buff_instance._template_data
+        local template_context = buff_instance._template_context
+        _, max_stacks = min_max_step_func(template_data, template_context)
+    end
+
+    local child_buff_template = template.child_buff_template
+    mod:echo(child_buff_template)
+    local child_template = BuffTemplates[child_buff_template]
+    if child_template then
+        -- https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/parent_proc_buff.lua#L15
+        max_stacks = (buff_instance._template_override_data.max_stacks or child_template.max_stacks or 1 or 1)
+    end
+
+    max_stacks = max_stacks or 1
+
+    return {
+        icon = buff_instance:_hud_icon(),
+        gradient_map = buff_instance:hud_icon_gradient_map(),
+        stackable = max_stacks > 1,
+        max_stacks = max_stacks,
+        events = {},
+        is_active = true,
+        current_stack_count = stack_count,
+        category = template.buff_category,
+        related_talents = template.related_talents,
+        source_item_name = item_name,
+        --instance = buff_instance
+    }
 end
 
 function mod:finalize_tracking(tracking_end_time)
