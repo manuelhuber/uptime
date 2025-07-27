@@ -27,9 +27,7 @@ function get_talent_for_buff(buff)
     local related_talent_name = buff.related_talents and buff.related_talents[1]
     local buff_name = buff.name or ""
     if buff_to_talent[buff_name] then
-        mod:echo("special handling for" .. buff_name)
         local talent_id = buff_to_talent[buff_name]
-        mod:echo("talent " .. talent_id)
         return get_talent(talent_id)
     end
     for player_archetype, archetype_talents in pairs(ArchetypeTalents) do

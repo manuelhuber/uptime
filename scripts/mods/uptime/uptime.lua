@@ -25,9 +25,9 @@ mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")  -- History f
 -- Toggle uptime tracking (start/stop)
 mod:command("u", "Toggle uptime tracking", function()
     if mod:try_start_tracking({ mission_name = "test", mechanism_data = {} }) then
-        mod:echo("tracking started")
+        mod:debug("tracking started")
     else
-        mod:echo("tracking ended")
+        mod:debug("tracking ended")
         mod:try_end_tracking()
     end
 end)
