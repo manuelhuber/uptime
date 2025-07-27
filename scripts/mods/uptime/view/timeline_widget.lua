@@ -6,14 +6,18 @@ function get_widget(uptime_view, scene_graph_id, width, height, segments, missio
         {
             pass_type = "rect",
             style = {
-                color = Color.ui_grey_medium(120, true),
+                color = Color.black(120, true),
                 size = { width, height }
             },
         } }
 
     for _, segment in pairs(segments) do
-        local start = segment.start_time
-        local endtime = segment.end_time
+        -- some files have combat segments past the mission end. Root cause unkown
+        local start = math.min(segment.start_time, mission_length)
+        local endtime = math.min(segment.end_time, mission_length)
+
+        --local start = segment.start_time
+        --local endtime = segment.end_time
         local segment_width = ((endtime - start) / mission_length) * width
         local offset = (start / mission_length) * width
         template[#template + 1] = {
@@ -21,7 +25,12 @@ function get_widget(uptime_view, scene_graph_id, width, height, segments, missio
             style = {
                 size = { segment_width, height },
                 offset = { offset, 0 },
-                color = Color.red(255, true),
+                color = {
+                    255,
+                    255,
+                    83,
+                    44,
+                },
             },
         }
     end

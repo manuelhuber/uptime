@@ -3,18 +3,18 @@ local renderer = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_row_v1")
 local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_definitions")
 mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_data_handler")
 local tooltip_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/tooltip_definition")
-local get_timeline_widget = mod:io_dofile("uptime/scripts/mods/uptime/view/timeline_widget")
+local uptime_mission_overview = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_mission_overview")
 local package_manager = mod:io_dofile("uptime/scripts/mods/uptime/uptime_package_manager")
 
 local UptimeView = class("UptimeView", "BaseView")
 
-local show_mission_overview = false
+local show_mission_overview = true
 
 function UptimeView:init(settings, context)
     self._definitions = Definitions
     local mission_secene = self._definitions.mission_section_scene_graph_id
-    local row_scene = self._definitions.row_scene_graph_id
     if not show_mission_overview then
+        local row_scene = self._definitions.row_scene_graph_id
         local mission_height = self._definitions.scenegraph_definition[mission_secene].size[2]
         self._definitions.scenegraph_definition[mission_secene].size[2] = 0
         self._definitions.scenegraph_definition[row_scene].position[2] = self._definitions.scenegraph_definition[row_scene].position[2] - mission_height
@@ -36,14 +36,10 @@ function UptimeView:on_enter()
 end
 
 function UptimeView:create_mission_section(mission)
-    local widget = get_timeline_widget(
-            self,
-            self._definitions.mission_section_scene_graph_id,
-            renderer.get_width(),
-            50,
-            mission.combats_segments,
-            mission.time)
-    self._widgets[#self._widgets + 1] = widget
+    local widgets = uptime_mission_overview(self, mission, renderer.get_width())
+    for _, widget in pairs(widgets) do
+        self._widgets[#self._widgets + 1] = widget
+    end
 end
 
 function UptimeView:on_exit(...)
@@ -68,7 +64,9 @@ function UptimeView:create_rows(buffs)
 
     local header_row = renderer.create_header_row(self)
     self._widgets[#self._widgets + 1] = header_row
+
     local index = 2 -- header row is double height
+
     for _, buff in ipairs(sorted_buffs) do
         local widgets = renderer.create_row(self, buff, index)
         for _, widget in pairs(widgets) do
