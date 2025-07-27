@@ -27,7 +27,7 @@ function UptimeView:init(settings, context)
 end
 
 function UptimeView:on_enter()
-    self:for_all_icons(package_manager.load_resource)
+    self:for_all_icons(mod.packages.load_resource)
     if show_mission_overview then
         self:create_mission_section(self.display_values.mission)
     end
@@ -43,7 +43,7 @@ function UptimeView:create_mission_section(mission)
 end
 
 function UptimeView:on_exit(...)
-    self:for_all_icons(package_manager.unload_resource)
+    self:for_all_icons(mod.packages.unload_resource)
     UptimeView.super.on_exit(self, ...)
 end
 

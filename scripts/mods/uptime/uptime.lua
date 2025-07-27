@@ -19,7 +19,6 @@ mod:io_dofile("uptime/scripts/mods/uptime/libs/_libs")
 mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_tracking")  -- Buff tracking calculations
 mod:io_dofile("uptime/scripts/mods/uptime/data/uptime_io")           -- File I/O operations
 mod:io_dofile("uptime/scripts/mods/uptime/uptime_ui")           -- UI components
-mod:io_dofile("uptime/scripts/mods/uptime/uptime_package_manager")
 mod:io_dofile("uptime/scripts/mods/uptime/history/uptime_history")  -- History functionality
 local mission_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/missions")
 

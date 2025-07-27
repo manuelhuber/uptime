@@ -1,3 +1,4 @@
+local mod = get_mod("uptime")
 local loaded_packages = {}
 
 function load_resource(name)
@@ -16,7 +17,7 @@ function unload_resource(name)
     end
 end
 
-return {
+mod.packages = {
     load_resource = load_resource,
     unload_resource = unload_resource
 }
