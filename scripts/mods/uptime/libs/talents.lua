@@ -12,6 +12,11 @@ local all_trees = {
 local buff_to_talent = {
     adamant_terminus_warrant_ranged = "adamant_terminus_warrant",
     adamant_terminus_warrant_melee = "adamant_terminus_warrant",
+    adamant_forceful_stacks = "adamant_forceful",
+
+    veteran_weapon_switch_melee_visual = "veteran_weapon_switch_passive",
+    veteran_weapon_switch_ranged_visual = "veteran_weapon_switch_passive",
+    veteran_weapon_switch_melee_buff = "veteran_weapon_switch_passive",
 }
 
 function get_talent(talent_id)
