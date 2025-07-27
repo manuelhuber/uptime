@@ -1,6 +1,6 @@
 local mod = get_mod("uptime")
 
-local get_talent = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
+local talent_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
 local TalentLayoutParser = mod:original_require("scripts/ui/views/talent_builder_view/utilities/talent_layout_parser")
 
 function mod:generate_display_values(entry)
@@ -281,12 +281,9 @@ end
 
 function generate_tooltip(buff)
     local title, description
-
-    local talents = buff.related_talents
     local item = buff.related_item
-    if talents then
-        -- even though it's an array buffs only have 1 talent
-        local talent = get_talent(talents[1])
+    local talent = talent_lib.get_talent_for_buff(buff)
+    if talent then
         title = Localize(talent.display_name)
         description = TalentLayoutParser.talent_description(talent, 1, Color.ui_terminal(255, true))
     elseif item then
