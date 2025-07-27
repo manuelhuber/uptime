@@ -4,7 +4,6 @@ local Definitions = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_d
 mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_view_data_handler")
 local tooltip_definition = mod:io_dofile("uptime/scripts/mods/uptime/view/tooltip_definition")
 local uptime_mission_overview = mod:io_dofile("uptime/scripts/mods/uptime/view/uptime_mission_overview")
-local package_manager = mod:io_dofile("uptime/scripts/mods/uptime/uptime_package_manager")
 
 local UptimeView = class("UptimeView", "BaseView")
 

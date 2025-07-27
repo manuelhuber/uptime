@@ -13,7 +13,7 @@ end
 
 -- Check if a file or directory exists in this path
 local function exists(file)
-    local ok, err, code = mod.os.rename(file, file)
+    local ok, err, code = mod.lib.os.rename(file, file)
     if not ok then
         if code == 13 then
             -- Permission denied, but it exists
@@ -52,7 +52,7 @@ end
 
 -- Get the path to the uptime history directory
 mod.appdata_path = function(self)
-    local appdata = mod.os.getenv('APPDATA')
+    local appdata = mod.lib.os.getenv('APPDATA')
     return appdata .. "/Fatshark/Darktide/uptime_history/"
 end
 
@@ -60,9 +60,9 @@ end
 mod.create_uptime_history_directory = function(self)
     local path = self:appdata_path()
     if not isdir(path) then
-        mod.os.execute('mkdir ' .. path) -- ?
-        mod.os.execute("mkdir '" .. path .. "'") -- ?
-        mod.os.execute('mkdir "' .. path .. '"') -- Windows
+        mod.lib.os.execute('mkdir ' .. path) -- ?
+        mod.lib.os.execute("mkdir '" .. path .. "'") -- ?
+        mod.lib.os.execute('mkdir "' .. path .. '"') -- Windows
     end
 end
 
@@ -74,7 +74,7 @@ end
 
 -- Get the current date/time as a timestamp
 mod.current_date = function(self)
-    return mod.os.time(mod.os.date("*t"))
+    return mod.lib.os.time(mod.lib.os.date("*t"))
 end
 
 -- Save the uptime data to a file
@@ -162,7 +162,7 @@ mod.get_history_entries = function(self, scan_dir)
             if entry then
                 entry.file = file
                 entry.file_path = file_path
-                entry.date = mod.os.date("%Y-%m-%d %H:%M:%S", tonumber(date_str))
+                entry.date = mod.lib.os.date("%Y-%m-%d %H:%M:%S", tonumber(date_str))
                 entries[#entries + 1] = entry
             end
         else
@@ -198,7 +198,7 @@ mod.delete_entry = function(self, entry)
     end
 
     -- Try to remove the file
-    if mod.os.remove(entry.file_path) then
+    if mod.lib.os.remove(entry.file_path) then
         -- Update the cache to remove the deleted entry
         local cache = mod:get_history_entries_cache()
         local new_cache = {}

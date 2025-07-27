@@ -1,4 +1,5 @@
 local mod = get_mod("uptime")
+mod.lib = {}
 
 mod:io_dofile("uptime/scripts/mods/uptime/libs/debug")
 mod:io_dofile("uptime/scripts/mods/uptime/libs/items")
