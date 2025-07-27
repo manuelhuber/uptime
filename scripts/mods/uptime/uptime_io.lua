@@ -127,7 +127,9 @@ mod.load_entry = function(self, path)
         end
     end
 
-    entry.file_path = path
+    if entry then
+        entry.file_path = path
+    end
 
     return entry
 end
