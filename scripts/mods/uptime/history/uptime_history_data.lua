@@ -41,8 +41,7 @@ UptimeHistoryData.create_entry = function(self, history_entry)
         title = title .. " | " .. mission_modifier
     end
 
-    local subtitle = history_entry.player or ""
-
+    local subtitle = history_entry.meta_data.player or ""
     -- Create and return the entry
     return {
         widget_type = "settings_button",
