@@ -40,3 +40,10 @@ function mod:try_end_tracking()
     mod:save_entry(entry)
     return true
 end
+
+function mod:now()
+    if not Managers.time:has_timer("gameplay") then
+        return 0
+    end
+    return Managers.time:time("gameplay")
+end

@@ -32,13 +32,6 @@ function mod:end_mission_tracking()
     return mod.mission_tracking
 end
 
-function mod:now()
-    if not Managers.time:has_timer("gameplay") then
-        return 0
-    end
-    return Managers.time:time("gameplay")
-end
-
 mod:hook_safe(CLASS.AttackReportManager, "add_attack_result", function(func, self, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage,
                                                                        attack_result, attack_type, damage_efficiency, ...)
     if not mod:tracking_in_progress() then
