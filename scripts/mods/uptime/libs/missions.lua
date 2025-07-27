@@ -30,7 +30,7 @@ function localize_modifier(modifier)
     end
 end
 
-return {
+mod.lib.missions = {
     localize_name = localize_mission,
     localize_difficulty = localize_difficulty,
     localize_modifier = localize_modifier,
