@@ -5,6 +5,7 @@ local required_packages = {}
 function init()
     mod:hook("PackageManager", "_start_unloading_package", function(func, self, package_name)
         -- not sure if this package_name is the same as the icons we load.
+        mod:debug("unloading " .. package_name)
         if not required_packages[package_name] then
             func(self, package_name)
         end

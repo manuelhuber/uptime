@@ -1,11 +1,21 @@
+local DMF = get_mod("DMF")
 local mod = get_mod("uptime")
 
-function print_keys(table)
+local DEBUG = true
+
+function mod:debug(msg)
+    DMF:Debug(msg)
+    if DEBUG then
+        mod:echo(msg)
+    end
+end
+
+function mod.print_keys(table)
     for key, _ in pairs(table) do
         mod:echo(key)
     end
 end
 
 return {
-    print_keys = print_keys
+    print_keys = mod.print_keys
 }
