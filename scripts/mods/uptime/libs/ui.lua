@@ -20,8 +20,10 @@ function seconds_to_display_format(seconds)
     return string.format("%02d", minutes) .. ":" .. string.format("%02d", remaining_seconds)
 end
 
-return {
+mod.ui = {
     get_text_height = get_text_height,
     get_text_width = get_text_width,
     format_seconds = seconds_to_display_format,
 }
+
+return mod.ui
