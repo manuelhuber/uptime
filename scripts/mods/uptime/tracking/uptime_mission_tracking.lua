@@ -41,33 +41,42 @@ end
 
 mod:hook_safe(CLASS.AttackReportManager, "add_attack_result", function(func, self, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage,
                                                                        attack_result, attack_type, damage_efficiency, ...)
-    if is_local_player(attacking_unit) or is_local_player(attacked_unit) then
-        local now = mod:now()
-        local combats = mod.mission_tracking.combats
-        local combat_duration = 10 -- Duration to extend combat in seconds
+    if not mod:tracking_in_progress() then
+        return
+    end
+    add_combat(attacking_unit, attacked_unit)
+end)
 
-        if #combats > 0 then
-            local last_combat = combats[#combats]
+function add_combat(attacking_unit, attacked_unit)
+    if not is_local_player(attacking_unit) and not is_local_player(attacked_unit) then
+        return
+    end
 
-            if now >= last_combat.start_time and now <= last_combat.end_time then
-                -- Current time is within the last combat window, extend the end time
-                last_combat.end_time = now + combat_duration
-            elseif now > last_combat.end_time then
-                -- Current time is past the last combat window, create a new entry
-                table.insert(combats, {
-                    start_time = now,
-                    end_time = now + combat_duration
-                })
-            end
-        else
-            -- No combat entries yet, create the first one
+    local now = mod:now()
+    local combats = mod.mission_tracking.combats
+    local combat_duration = 10 -- Duration to extend combat in seconds
+
+    if #combats > 0 then
+        local last_combat = combats[#combats]
+
+        if now >= last_combat.start_time and now <= last_combat.end_time then
+            -- Current time is within the last combat window, extend the end time
+            last_combat.end_time = now + combat_duration
+        elseif now > last_combat.end_time then
+            -- Current time is past the last combat window, create a new entry
             table.insert(combats, {
                 start_time = now,
                 end_time = now + combat_duration
             })
         end
+    else
+        -- No combat entries yet, create the first one
+        table.insert(combats, {
+            start_time = now,
+            end_time = now + combat_duration
+        })
     end
-end)
+end
 
 function is_local_player(unit)
     local player = Managers.player:local_player(1)
