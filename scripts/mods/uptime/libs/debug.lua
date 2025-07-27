@@ -1,9 +1,11 @@
 local mod = get_mod("uptime")
 
-local DEBUG = Managers.player:local_player_safe(1):account_id() == "485cb060-d152-4a53-a029-8e1e0584e160"
+function DEBUG()
+    return Managers.player:local_player_safe(1):account_id() == "485cb060-d152-4a53-a029-8e1e0584e160"
+end
 
 function mod:debug(msg)
-    if DEBUG then
+    if DEBUG() then
         mod:echo(msg)
     end
 end
