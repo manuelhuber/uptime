@@ -11,6 +11,13 @@ mod:add_global_localize_strings({
 })
 
 return {
+    mission_duration = {
+        -- first %s: mission time (format mm:ss)
+        -- second %s: combat time (format mm:ss)
+        -- third %s: combat percentage
+        en = "Mission duration: %s - Combat duration: %s (%s)",
+        ["zh-cn"] = "任务时长: %s - 战斗时长: %s (%s)"
+    },
     mod_description = {
         en = "Tracks uptime of buffs.",
         ["zh-cn"] = "追踪增益效果的持续时间",
@@ -36,7 +43,7 @@ return {
         ["zh-cn"] = "持续时间(按层数)"
     },
 
-    -- general settings 
+    -- general settings
     open_uptime_history = {
         en = "Open Uptime History",
         ["zh-cn"] = "打开持续时间记录"
