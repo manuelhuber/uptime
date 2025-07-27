@@ -1,13 +1,14 @@
 # V1.1
-
 ## Major:
 
 - **!! Fixed long standing bug in the original Darktide HUD where it wouldn't always show all buffs !!**
     - This bug was also messing up the Uptime tracking. So if you noticed very low uptime values, e.g. for some
       keystones, this is now fixed.
 - Added settings to show more columns (e.g. total uptime instead of only percentage)
-- Fixed bug where some weapon blessings wouldn't show correct stacks
 - Added tooltips for weapon blessings
+- Added mission timeline
+- Fixed bug where some buffs wouldn't show correct stacks
+- added Chinese locale
 
 ## Minor:
 
