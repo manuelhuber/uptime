@@ -1,10 +1,8 @@
-local DMF = get_mod("DMF")
 local mod = get_mod("uptime")
 
 local DEBUG = true
 
 function mod:debug(msg)
-    DMF:Debug(msg)
     if DEBUG then
         mod:echo(msg)
     end
