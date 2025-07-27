@@ -151,13 +151,6 @@ local blueprints = {
 
             -- Set up pressed callback
             hotspot.pressed_callback = function()
-                -- Don't do anything if the entry is disabled
-                local is_disabled = entry.disabled or false
-                if is_disabled then
-                    return
-                end
-
-                -- Call the callback function
                 callback(parent, callback_name, widget, entry)()
             end
 

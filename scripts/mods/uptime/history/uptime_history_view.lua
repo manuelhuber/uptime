@@ -110,7 +110,7 @@ UptimeHistoryView._setup_entries_config = function(self, scan_dir)
     end
 
     -- Get all uptime history entries from the data handler
-    local entries, entries_by_title, default_entry = self._data_handler:get_entries(scan_dir)
+    local entries, entries_by_title, default_entry = self._data_handler:get_list_entries(scan_dir)
 
     -- Set default entry if available
     self._default_entry = default_entry
@@ -118,7 +118,7 @@ UptimeHistoryView._setup_entries_config = function(self, scan_dir)
     -- Set up the grid and widgets
     local scenegraph_id = "grid_content_pivot"
     local callback_name = "cb_on_entry_pressed"
-    self._entry_content_widgets, self._entry_alignment_list = self:_setup_content_widgets(entries, scenegraph_id, callback_name)
+    self._entry_content_widgets, self._entry_alignment_list = self:_setup_list_entry_widgets(entries, scenegraph_id, callback_name)
 
     -- Configure grid and scrollbar
     local scrollbar_widget_id = "scrollbar"
@@ -146,15 +146,15 @@ UptimeHistoryView._setup_grid = function(self, widgets, alignment_list, grid_sce
 end
 
 -- Create widgets from content entries and set up their alignment
-UptimeHistoryView._setup_content_widgets = function(self, content, scenegraph_id, callback_name)
+UptimeHistoryView._setup_list_entry_widgets = function(self, entries, scenegraph_id, callback_name)
     local widget_definitions = {}
     local widgets = {}
     local alignment_list = {}
-    local amount = #content
+    local amount = #entries
 
     -- Process entries in reverse order (newest first)
     for i = amount, 1, -1 do
-        local entry = content[i]
+        local entry = entries[i]
         local widget_type = entry.widget_type
         local template = self._blueprints[widget_type]
         local size = template.size
@@ -176,18 +176,9 @@ UptimeHistoryView._setup_content_widgets = function(self, content, scenegraph_id
             local name = scenegraph_id .. "_widget_" .. i
             widget = self:_create_widget(name, widget_definition)
 
-            -- Copy file information to widget
-            widget.file = entry.file
-            widget.file_path = entry.file_path
-
             -- Initialize widget with template
             if template.init then
                 template.init(self, widget, entry, callback_name)
-            end
-
-            -- Set focus group if specified
-            if entry.focus_group then
-                widget.content.focus_group = entry.focus_group
             end
 
             widgets[#widgets + 1] = widget
@@ -407,13 +398,8 @@ end
 -- Callback for when an entry is pressed in the history view
 UptimeHistoryView.cb_on_entry_pressed = function(self, widget, entry)
     -- Load the uptime history entry from file
-    self.entry = self._data_handler:load_entry(widget.file_path)
+    self.entry = entry.history_entry
     self:present_entry_widgets()
-
-    -- Call the entry's pressed function if it exists
-    if entry.pressed_function then
-        entry.pressed_function(self, widget, entry)
-    end
 end
 
 -- Callback for when the back button is pressed

@@ -11,6 +11,12 @@ if not _io.initialized then
 end
 
 -- ##### Helper functions #####
+local file_does_not_exist = {}
+
+function path(file_name)
+    return mod:appdata_path() .. file_name
+end
+
 
 -- Check if a file or directory exists in this path
 local function exists(file)
@@ -39,16 +45,6 @@ local function file_exists(name)
     else
         return false
     end
-end
-
--- Split a string by a separator
-local function split(str, sep)
-    local result = {}
-    local regex = ("([^%s]+)"):format(sep)
-    for each in str:gmatch(regex) do
-        table.insert(result, #result + 1, each)
-    end
-    return result
 end
 
 -- Get the path to the uptime history directory
@@ -107,10 +103,12 @@ mod.save_entry = function(self, entry)
 end
 
 -- Load uptime data from a file
-function mod:load_entry(path, file)
+function mod:load_entry(file_name)
+    local path = path(file_name)
+
     if not file_exists(path) then
         mod:echo("Error: File not found: " .. path)
-        return nil
+        return file_does_not_exist
     end
 
     local entry = nil
@@ -123,15 +121,14 @@ function mod:load_entry(path, file)
     end
 
     if entry then
-        entry.file = file
+        entry.file = file_name
         entry.file_path = path
-
     else
         return nil
     end
 
     if not entry.version then
-        local date_str = string.sub(file, 1, string.len(file) - 4)
+        local date_str = string.sub(file_name, 1, string.len(file_name) - 4)
         entry.date = v1_migration(entry, tonumber(date_str))
     end
 
@@ -154,23 +151,20 @@ end
 function mod:get_history_entries(scan_dir)
     local entries = {}
     local appdata = self:appdata_path()
-    local cache = self:get_history_entries_cache()
-    local file_names = cache
+    local file_names = self:get_history_entries_cache()
 
-    if scan_dir or not cache then
+    if scan_dir or not file_names then
         file_names = scandir(appdata)
         self:set_history_entries_cache(file_names)
     end
 
     for _, file in pairs(file_names) do
-        local file_path = appdata .. file
-        if file_exists(file_path) then
-            local entry = self:load_entry(file_path, file)
-            if entry then
-                entries[#entries + 1] = entry
-            end
-        else
+        local result = self:load_entry(file)
+        if result == file_does_not_exist then
             return self:get_history_entries(true)
+        end
+        if result then
+            entries[#entries + 1] = result
         end
     end
 

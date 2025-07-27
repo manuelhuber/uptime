@@ -7,7 +7,7 @@ UptimeHistoryData.init = function(self)
 end
 
 -- Get all uptime history entries, optionally forcing a directory scan
-UptimeHistoryData.get_entries = function(self, scan_dir)
+UptimeHistoryData.get_list_entries = function(self, scan_dir)
     -- Get all uptime history entries
     local history_entries = mod:get_history_entries(scan_dir)
     local entries = {}
@@ -16,7 +16,7 @@ UptimeHistoryData.get_entries = function(self, scan_dir)
     -- Process each history entry
     for i = 1, #history_entries do
         local history_entry = history_entries[i]
-        local entry = self:create_entry(history_entry)
+        local entry = self:create_list_entry(history_entry)
         entries[#entries + 1] = entry
         entries_by_title[entry.title] = entry
     end
@@ -27,7 +27,7 @@ UptimeHistoryData.get_entries = function(self, scan_dir)
 end
 
 -- Create an entry from history data
-UptimeHistoryData.create_entry = function(self, history_entry)
+UptimeHistoryData.create_list_entry = function(self, history_entry)
 
     local data = history_entry.meta_data
     local mission_name = mod.lib.missions.localize_name(data.mission_name)
@@ -47,13 +47,8 @@ UptimeHistoryData.create_entry = function(self, history_entry)
         widget_type = "settings_button",
         title = title,
         subtitle = subtitle,
-        file = history_entry.file,
-        file_path = history_entry.file_path
+        history_entry = history_entry,
     }
-end
-
-UptimeHistoryData.load_entry = function(self, file_path)
-    return mod:load_entry(file_path)
 end
 
 UptimeHistoryData.delete_entry = function(self, entry)
