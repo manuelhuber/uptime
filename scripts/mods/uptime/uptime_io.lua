@@ -121,7 +121,7 @@ mod.load_entry = function(self, path)
     local entry = nil
     for entry_json in _io.lines(path) do
         if entry then
-            mod:echo("Received more than 1 line when loading file!")
+            mod:echo("Received more than 1 line when loading file! Save file might be corrupted")
         else
             entry = json.decode(entry_json)
         end
