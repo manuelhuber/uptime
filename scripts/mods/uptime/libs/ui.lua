@@ -30,6 +30,10 @@ function combat_color(text)
     })
 end
 
+function format_date(date)
+    return mod.lib.os.date("%Y-%m-%d %H:%M:%S", tonumber(date))
+end
+
 mod.ui = {
     get_text_height = get_text_height,
     get_text_width = get_text_width,

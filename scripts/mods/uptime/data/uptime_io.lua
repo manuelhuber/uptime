@@ -1,6 +1,7 @@
 local mod = get_mod("uptime")
 local DMF = get_mod("DMF")
 local json = mod:io_dofile("uptime/scripts/mods/uptime/libs/json")
+local v1_migration = mod:io_dofile("uptime/scripts/mods/uptime/data/v1_to_v2")
 
 -- ##### IO and OS functions #####
 local _io = DMF:persistent_table("_io")
@@ -106,7 +107,7 @@ mod.save_entry = function(self, entry)
 end
 
 -- Load uptime data from a file
-mod.load_entry = function(self, path)
+function mod:load_entry(path, file)
     if not file_exists(path) then
         mod:echo("Error: File not found: " .. path)
         return nil
@@ -122,7 +123,16 @@ mod.load_entry = function(self, path)
     end
 
     if entry then
+        entry.file = file
         entry.file_path = path
+
+    else
+        return nil
+    end
+
+    if not entry.version then
+        local date_str = string.sub(file, 1, string.len(file) - 4)
+        entry.date = v1_migration(entry, tonumber(date_str))
     end
 
     return entry
@@ -141,7 +151,7 @@ local function scandir(directory)
 end
 
 -- Get all uptime history entries
-mod.get_history_entries = function(self, scan_dir)
+function mod:get_history_entries(scan_dir)
     local entries = {}
     local appdata = self:appdata_path()
     local cache = self:get_history_entries_cache()
@@ -152,26 +162,16 @@ mod.get_history_entries = function(self, scan_dir)
         self:set_history_entries_cache(file_names)
     end
 
-    local missing_file = false
     for _, file in pairs(file_names) do
         local file_path = appdata .. file
         if file_exists(file_path) then
-            local date_str = string.sub(file, 1, string.len(file) - 4)
-            local entry = self:load_entry(file_path)
-
+            local entry = self:load_entry(file_path, file)
             if entry then
-                entry.file = file
-                entry.file_path = file_path
-                entry.date = mod.lib.os.date("%Y-%m-%d %H:%M:%S", tonumber(date_str))
                 entries[#entries + 1] = entry
             end
         else
-            missing_file = true
+            return self:get_history_entries(true)
         end
-    end
-
-    if missing_file then
-        entries = self:get_history_entries(true)
     end
 
     return entries

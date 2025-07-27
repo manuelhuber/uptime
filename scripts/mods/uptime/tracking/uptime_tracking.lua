@@ -26,15 +26,16 @@ function mod:try_end_tracking()
     local player = Managers.player:local_player(1):name()
     local params = mod.mission_params
     local entry = {
+        version = "2",
         buffs = buffs,
         mission = mission,
         mission_name = params.mission_name,
-        player = player,
         meta_data = {
             mission_name = params.mission_name,
             player = player,
             mission_difficulty = params.mechanism_data.challenge,
-            mission_modifier = params.mechanism_data.circumstance_name
+            mission_modifier = params.mechanism_data.circumstance_name,
+            date = mod:current_date(),
         },
     }
     mod:save_entry(entry)
