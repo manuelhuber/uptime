@@ -163,6 +163,7 @@ function init_buff(buff_instance)
     local max_stacks = get_actual_max(buff_instance)
 
     return {
+        name = buff_instance:title(),
         icon = buff_instance:_hud_icon(),
         gradient_map = buff_instance:hud_icon_gradient_map(),
         stackable = max_stacks > 1,
