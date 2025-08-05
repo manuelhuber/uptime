@@ -70,11 +70,6 @@ return {
         ["zh-cn"] = "总持续时间",
         ["zh-tw"] = "總持續時間",
     },
-    loc_uptime_header = {
-        en = "uptime",
-        ["zh-cn"] = "持续时间"
-    },
-
     show_uptime_percentage = {
         en = "uptime percentage",
         ["zh-cn"] = "持续时间百分比",
