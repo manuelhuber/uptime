@@ -15,7 +15,7 @@ end
 function mod:start_mission_tracking()
     mod.mission_tracking.start_time = mod:now()
     mod.mission_tracking.end_time = nil
-    mod.combats = {}
+    mod.mission_tracking.combats = {}
 end
 
 function mod:end_mission_tracking()
