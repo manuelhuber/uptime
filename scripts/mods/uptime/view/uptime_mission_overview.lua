@@ -11,7 +11,7 @@ function template(width)
             style = {
                 size = { width, 30 },
                 line_spacing = 1.2,
-                font_size = 32,
+                font_size = 26,
                 drop_shadow = true,
                 font_type = "machine_medium",
                 text_color = Color.terminal_text_header(255, true),
