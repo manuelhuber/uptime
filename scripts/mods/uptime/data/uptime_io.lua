@@ -65,7 +65,7 @@ end
 
 -- Generate a file path for the current uptime history entry
 mod.create_uptime_history_entry_path = function(self)
-    local file_name = tostring(self:current_date()) .. ".lua"
+    local file_name = tostring(self:current_date()) .. ".json"
     return self:appdata_path() .. file_name, file_name
 end
 
