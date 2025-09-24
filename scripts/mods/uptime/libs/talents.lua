@@ -17,6 +17,8 @@ local buff_to_talent = {
     veteran_weapon_switch_melee_visual = "veteran_weapon_switch_passive",
     veteran_weapon_switch_ranged_visual = "veteran_weapon_switch_passive",
     veteran_weapon_switch_melee_buff = "veteran_weapon_switch_passive",
+    veteran_snipers_focus_stat_buff_increased_stacks = "veteran_snipers_focus",
+    veteran_snipers_focus_stat_buff = "veteran_snipers_focus",
 }
 
 function get_talent(talent_id)
