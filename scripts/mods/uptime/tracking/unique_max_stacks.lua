@@ -21,6 +21,9 @@ local max_stacks = {
 
     -- https://github.com/Aussiemon/Darktide-Source-Code/blob/bb5ee8f4309f1bc9bf9327d2ef59a088ca1aa5d4/scripts/settings/buff/archetype_buff_templates/zealot_buff_templates.lua#L1137
     zealot_preacher_melee_increase_next_melee_proc = TalentSettings.zealot_3.zealot_preacher_melee_increase_next_melee_proc,
+
+    -- https://github.com/Aussiemon/Darktide-Source-Code/blob/bb5ee8f4309f1bc9bf9327d2ef59a088ca1aa5d4/scripts/settings/ability/archetype_talents/talents/veteran_talents.lua#L2956
+    veteran_improved_tag = TalentSettings.veteran.veteran_tag.max_stacks
 }
 
 return max_stacks
