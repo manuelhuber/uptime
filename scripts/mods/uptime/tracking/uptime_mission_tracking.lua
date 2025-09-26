@@ -47,7 +47,7 @@ function add_combat(attacking_unit, attacked_unit)
 
     local now = mod:now()
     local combats = mod.mission_tracking.combats
-    local combat_duration = 10 -- Duration to extend combat in seconds
+    local combat_duration = 5 -- Duration to extend combat in seconds
 
     if #combats > 0 then
         local last_combat = combats[#combats]
