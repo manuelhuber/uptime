@@ -1,35 +1,35 @@
 local mod = get_mod("uptime")
 
-mod.mission_tracking = {
+local mission_tracking = {
     start_time = nil,
     end_time = nil,
     combats = {}
 }
 
 function mod:tracking_in_progress()
-    local has_started = mod.mission_tracking.start_time ~= nil
-    local has_ended = mod.mission_tracking.end_time ~= nil
+    local has_started = mission_tracking.start_time ~= nil
+    local has_ended = mission_tracking.end_time ~= nil
     return has_started and (not has_ended)
 end
 
 function mod:start_mission_tracking()
-    mod.mission_tracking.start_time = mod:now()
-    mod.mission_tracking.end_time = nil
-    mod.mission_tracking.combats = {}
+    mission_tracking.start_time = mod:now()
+    mission_tracking.end_time = nil
+    mission_tracking.combats = {}
 end
 
 function mod:end_mission_tracking()
     local end_time = mod:now()
-    mod.mission_tracking.end_time = end_time
+    mission_tracking.end_time = end_time
 
-    local combats = mod.mission_tracking.combats
+    local combats = mission_tracking.combats
     if #combats > 0 then
         local last_combat = combats[#combats]
         if last_combat.end_time > end_time then
             last_combat.end_time = end_time
         end
     end
-    return mod.mission_tracking
+    return mission_tracking
 end
 
 mod:hook_safe(CLASS.AttackReportManager, "add_attack_result", function(func, self, damage_profile, attacked_unit, attacking_unit, attack_direction, hit_world_position, hit_weakspot, damage,
@@ -46,7 +46,7 @@ function add_combat(attacking_unit, attacked_unit)
     end
 
     local now = mod:now()
-    local combats = mod.mission_tracking.combats
+    local combats = mission_tracking.combats
     local combat_duration = 5 -- Duration to extend combat in seconds
 
     if #combats > 0 then

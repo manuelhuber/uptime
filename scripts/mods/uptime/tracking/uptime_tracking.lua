@@ -21,7 +21,7 @@ function mod:try_end_tracking()
     end
 
     local mission = mod:end_mission_tracking()
-    local buffs = mod:end_buff_tracking()
+    local buffs = mod:end_buff_tracking(mission.end_time)
 
     local player = Managers.player:local_player(1):name()
     local archetype = Managers.player:local_player(1):archetype_name()

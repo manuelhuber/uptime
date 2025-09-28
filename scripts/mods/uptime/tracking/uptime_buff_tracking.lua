@@ -38,7 +38,7 @@ local TalentSettings = mod:original_require("scripts/settings/talent/talent_sett
     - Supporting future analytics on buff timing and patterns
 ]]
 
-mod.tracked_buffs = {}
+local tracked_buffs = {}
 
 local displayed_buff_categories = {
     talents = true,
@@ -47,12 +47,12 @@ local displayed_buff_categories = {
 }
 
 function mod:start_buff_tracking()
-    mod.tracked_buffs = {}
+    tracked_buffs = {}
 end
 
-function mod:end_buff_tracking()
-    mod:finalize_tracking(mod.mission_tracking.end_time)
-    return mod.tracked_buffs
+function mod:end_buff_tracking(end_time)
+    finalize_tracking(end_time)
+    return tracked_buffs
 end
 
 mod:hook_safe("HudElementPlayerBuffs", "_update_buffs", function(self)
@@ -63,8 +63,8 @@ mod:hook_safe("HudElementPlayerBuffs", "_update_buffs", function(self)
     local active_buffs_data = self._active_buffs_data
     local now = mod:now()
 
-    local currently_active_buffs = update_active_buffs(mod.tracked_buffs, active_buffs_data, now)
-    update_removed_buffs(mod.tracked_buffs, currently_active_buffs, now)
+    local currently_active_buffs = update_active_buffs(tracked_buffs, active_buffs_data, now)
+    update_removed_buffs(tracked_buffs, currently_active_buffs, now)
 end)
 
 function update_active_buffs(tracked_buffs, active_buffs_data, now)
@@ -246,8 +246,8 @@ function trait_belongs_to_buff(trait_definition, buff_title)
     return false
 end
 
-function mod:finalize_tracking(tracking_end_time)
-    for buff_name, buff_data in pairs(mod.tracked_buffs) do
+function finalize_tracking(tracking_end_time)
+    for buff_name, buff_data in pairs(tracked_buffs) do
         -- If the buff is still active at the end of tracking, add a remove event
         if buff_data.is_active then
             table.insert(buff_data.events, {
