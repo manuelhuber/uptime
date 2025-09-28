@@ -51,6 +51,11 @@ UptimeHistoryData.create_list_entry = function(self, history_entry)
     if player_name then
         subtitle = subtitle .. player_name
     end
+    local date = history_entry.meta_data.date
+    if date then
+        subtitle = subtitle .. " | " .. mod.ui.format_date(date)
+    end
+
 
     -- Create and return the entry
     return {

@@ -38,7 +38,8 @@ mod.ui = {
     get_text_height = get_text_height,
     get_text_width = get_text_width,
     format_seconds = seconds_to_display_format,
-    combat_color = combat_color
+    combat_color = combat_color,
+    format_date = format_date,
 }
 
 return mod.ui
