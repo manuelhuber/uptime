@@ -1,6 +1,7 @@
 local mod = get_mod("uptime")
 mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_buff_tracking")
 mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_mission_tracking")
+mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_weapon_tracking")
 mod:io_dofile("uptime/scripts/mods/uptime/tracking/uptime_override_hud_logic")
 
 mod.mission_params = nil
@@ -11,6 +12,7 @@ function mod:try_start_tracking(params)
     end
     mod:start_mission_tracking()
     mod:start_buff_tracking()
+    mod:start_weapon_tracking()
     mod.mission_params = params
     return true
 end
@@ -22,6 +24,7 @@ function mod:try_end_tracking()
 
     local mission = mod:end_mission_tracking()
     local buffs = mod:end_buff_tracking(mission.end_time)
+    local weapon_tracking = mod:end_weapon_tracking()
 
     local player = Managers.player:local_player(1):name()
     local archetype = Managers.player:local_player(1):archetype_name()
@@ -29,6 +32,7 @@ function mod:try_end_tracking()
     local entry = {
         version = "2",
         buffs = buffs,
+        weapons = weapon_tracking,
         mission = mission,
         mission_name = params.mission_name,
         meta_data = {
