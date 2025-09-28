@@ -24,6 +24,7 @@ function mod:try_end_tracking()
     local buffs = mod:end_buff_tracking()
 
     local player = Managers.player:local_player(1):name()
+    local archetype = Managers.player:local_player(1):archetype_name()
     local params = mod.mission_params
     local entry = {
         version = "2",
@@ -33,6 +34,7 @@ function mod:try_end_tracking()
         meta_data = {
             mission_name = params.mission_name,
             player = player,
+            archetype = archetype,
             mission_difficulty = params.mechanism_data.challenge,
             mission_modifier = params.mechanism_data.circumstance_name,
             date = mod:current_date(),

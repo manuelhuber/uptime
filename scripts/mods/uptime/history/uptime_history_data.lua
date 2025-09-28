@@ -1,4 +1,5 @@
 local mod = get_mod("uptime")
+local UISettings = require("scripts/settings/ui/ui_settings")
 
 -- UptimeHistoryData handles all data-related operations for uptime history entries
 local UptimeHistoryData = class("UptimeHistoryData")
@@ -41,7 +42,16 @@ UptimeHistoryData.create_list_entry = function(self, history_entry)
         title = title .. " | " .. mission_modifier
     end
 
-    local subtitle = history_entry.meta_data.player or ""
+    local archetype = history_entry.meta_data.archetype
+    local subtitle = ""
+    if (archetype) then
+        subtitle = UISettings.archetype_font_icon[archetype] .. " "
+    end
+    local player_name = history_entry.meta_data.player
+    if player_name then
+        subtitle = subtitle .. player_name
+    end
+
     -- Create and return the entry
     return {
         widget_type = "settings_button",
