@@ -10,7 +10,6 @@ function mod:end_weapon_tracking()
 end
 
 mod:hook_safe(CLASS.PlayerUnitWeaponExtension, "on_slot_wielded", function(self, slot_name)
-    mod.debug = self._weapons
     if not mod:tracking_in_progress() then
         return
     end
