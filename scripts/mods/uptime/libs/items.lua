@@ -2,6 +2,10 @@ local mod = get_mod("uptime")
 local ItemUtils = mod:original_require("scripts/utilities/items")
 local MasterItems = mod:original_require("scripts/backend/master_items")
 
+function is_weapon(item)
+    return ItemUtils.is_weapon(item)
+end
+
 function get_item_name(item)
     return ItemUtils.display_name(item)
 end
@@ -22,8 +26,11 @@ function get_blessing_description(trait)
     end
 end
 
-return {
+mod.items = {
+    is_weapon = is_weapon,
     get_name = get_item_name,
     get_blessing_name = get_blessing_name,
     get_blessing_description = get_blessing_description,
 }
+
+return mod.items
