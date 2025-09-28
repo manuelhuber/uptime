@@ -10,7 +10,7 @@ function mod:debug(msg)
     end
 end
 
-function mod.print_keys(table)
+function mod:print_keys(table)
     for key, _ in pairs(table) do
         mod:echo(key)
     end
