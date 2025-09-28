@@ -30,7 +30,7 @@ function UptimeView:on_enter()
     if show_mission_overview then
         self:create_mission_section(self.display_values.mission)
     end
-    self:create_rows(self.display_values.buffs)
+    self:create_rows(self.display_values.buffs, self.display_values.weapons)
     UptimeView.super.on_enter(self)
 end
 
@@ -52,7 +52,8 @@ function UptimeView:for_all_icons(func)
     end
 end
 
-function UptimeView:create_rows(buffs)
+function UptimeView:create_rows(buffs, weapons)
+
     local sorted_buffs = {}
     for _, buff in pairs(buffs) do
         table.insert(sorted_buffs, buff)
@@ -68,6 +69,14 @@ function UptimeView:create_rows(buffs)
 
     for _, buff in ipairs(sorted_buffs) do
         local widgets = renderer.create_row(self, buff, index)
+        for _, widget in pairs(widgets) do
+            self._widgets[#self._widgets + 1] = widget
+        end
+        index = index + 1
+    end
+
+    for name, weapon_entry in pairs(weapons) do
+        local widgets = renderer.create_row(self, weapon_entry, index)
         for _, widget in pairs(widgets) do
             self._widgets[#self._widgets + 1] = widget
         end

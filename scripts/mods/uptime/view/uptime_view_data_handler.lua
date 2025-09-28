@@ -7,9 +7,11 @@ function mod:generate_display_values(entry)
     local mission = entry.mission
     local mission_display_values = generate_display_values_for_mission(mission)
     local buff_display_values = generate_display_values_for_buffs(mission, entry.buffs)
+    local weapon_display_values = generate_display_values_for_weapons(mission, entry.weapons)
     return {
         mission = mission_display_values,
-        buffs = buff_display_values
+        buffs = buff_display_values,
+        weapons = weapon_display_values
     }
 end
 
@@ -35,6 +37,87 @@ function generate_display_values_for_mission(mission)
     }
 end
 
+function generate_display_values_for_weapons(mission, weapons)
+    local weapon_display_values = {}
+
+    if not weapons then
+        return weapon_display_values
+    end
+
+    local mission_start = mission.start_time or 0
+    local mission_end = mission.end_time or mission_start
+    local mission_time = mission_end - mission_start
+    local total_combat_time = calculate_total_combat_time(mission)
+
+    for slot_name, slot_data in pairs(weapons) do
+        local events = (slot_data and slot_data.events) or {}
+
+        -- Build active periods (wielded intervals) from equipped/unwielded events
+        local active_periods = {}
+        local current_period_start = nil
+
+        for _, ev in ipairs(events) do
+            if ev.equipped and not current_period_start then
+                current_period_start = ev.time or mission_start
+            elseif (not ev.equipped) and current_period_start then
+                local s = math.max(current_period_start, mission_start)
+                local e = math.min(ev.time or mission_end, mission_end)
+                if e > s then
+                    table.insert(active_periods, { start_time = s, end_time = e })
+                end
+                current_period_start = nil
+            end
+        end
+        -- If still wielded at mission end, close the period at mission_end
+        if current_period_start then
+            local s = math.max(current_period_start, mission_start)
+            local e = mission_end
+            if e > s then
+                table.insert(active_periods, { start_time = s, end_time = e })
+            end
+        end
+
+        -- Compute totals using existing helpers
+        local total_uptime = calculate_uptime(active_periods)
+        local uptime_percentage = calculate_uptime_percentage(total_uptime, mission_time)
+
+        local uptime_combat = 0
+        local uptime_combat_percentage = 0
+        if mission.combats and #mission.combats > 0 then
+            local uc, ucp = calculate_combat_uptime(active_periods, mission)
+            uptime_combat = uc or 0
+            uptime_combat_percentage = ucp or 0
+        end
+
+        -- Non-stackable: represent as single-stack arrays for compatibility
+        local time_per_stack = { [1] = total_uptime }
+        local combat_time_per_stack = { [1] = uptime_combat }
+        local combat_percentage_per_stack = calculate_combat_percentage_per_stack(combat_time_per_stack, total_combat_time)
+
+        weapon_display_values[slot_name] = {
+            uptime = total_uptime,
+            uptime_percentage = uptime_percentage,
+            uptime_combat = uptime_combat,
+            uptime_combat_percentage = uptime_combat_percentage,
+            time_per_stack = time_per_stack,
+            combat_time_per_stack = combat_time_per_stack,
+            combat_percentage_per_stack = combat_percentage_per_stack,
+            icon = nil,
+            gradient_map = nil,
+            tooltip = { title = (slot_data and slot_data.name) or slot_name, description = "" },
+            max_stacks = 1,
+            stackable = false,
+            time_at_max_stack = time_per_stack[1] or 0,
+            combat_time_at_max_stack = combat_time_per_stack[1] or 0,
+            combat_percentage_at_max_stack = (uptime_combat > 0) and ((combat_time_per_stack[1] or 0) / uptime_combat * 100) or 0,
+            average_stacks = 1,
+            average_stacks_combat = 1,
+        }
+    end
+
+    return weapon_display_values
+end
+
 function generate_display_values_for_buffs(mission, buffs)
     local buff_display_values = {}
 
@@ -45,6 +128,7 @@ function generate_display_values_for_buffs(mission, buffs)
     end
     return buff_display_values
 end
+
 function generate_display_values_for_buff(mission, buff)
     local max_stacks = buff.max_stacks or 1
 
