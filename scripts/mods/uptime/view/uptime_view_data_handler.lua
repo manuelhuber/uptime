@@ -4,10 +4,11 @@ local talent_lib = mod:io_dofile("uptime/scripts/mods/uptime/libs/talents")
 local TalentLayoutParser = mod:original_require("scripts/ui/views/talent_builder_view/utilities/talent_layout_parser")
 
 function mod:generate_display_values(entry)
+    local has_weapon_tracking = tonumber(entry.version) > 2
     local mission = entry.mission
     local mission_display_values = generate_display_values_for_mission(mission)
-    local buff_display_values = generate_display_values_for_buffs(mission, entry.buffs)
-    local weapon_display_values = generate_display_values_for_weapons(mission, entry.weapons)
+    local buff_display_values = generate_display_values_for_buffs(mission, entry.buffs, has_weapon_tracking)
+    local weapon_display_values = has_weapon_tracking and generate_display_values_for_weapons(mission, entry.weapons, entry.buffs) or nil
     return {
         mission = mission_display_values,
         buffs = buff_display_values,
@@ -37,7 +38,7 @@ function generate_display_values_for_mission(mission)
     }
 end
 
-function generate_display_values_for_weapons(mission, weapons)
+function generate_display_values_for_weapons(mission, weapons, buffs)
     local weapon_display_values = {}
 
     if not weapons then
@@ -47,96 +48,70 @@ function generate_display_values_for_weapons(mission, weapons)
     local mission_start = mission.start_time or 0
     local mission_end = mission.end_time or mission_start
     local mission_time = mission_end - mission_start
-    local total_combat_time = calculate_total_combat_time(mission)
 
     for slot_name, slot_data in pairs(weapons) do
         local events = (slot_data and slot_data.events) or {}
 
-        -- Build active periods (wielded intervals) from equipped/unwielded events
-        local active_periods = {}
-        local current_period_start = nil
+        local active_periods = extract_active_periods(events)
+        local active_combat_periods = get_periods_overlaps(active_periods, mission.combats)
 
-        for _, ev in ipairs(events) do
-            if ev.equipped and not current_period_start then
-                current_period_start = ev.time or mission_start
-            elseif (not ev.equipped) and current_period_start then
-                local s = math.max(current_period_start, mission_start)
-                local e = math.min(ev.time or mission_end, mission_end)
-                if e > s then
-                    table.insert(active_periods, { start_time = s, end_time = e })
-                end
-                current_period_start = nil
-            end
-        end
-        -- If still wielded at mission end, close the period at mission_end
-        if current_period_start then
-            local s = math.max(current_period_start, mission_start)
-            local e = mission_end
-            if e > s then
-                table.insert(active_periods, { start_time = s, end_time = e })
-            end
-        end
-
-        -- Compute totals using existing helpers
         local total_uptime = calculate_uptime(active_periods)
         local uptime_percentage = calculate_uptime_percentage(total_uptime, mission_time)
 
         local uptime_combat = 0
         local uptime_combat_percentage = 0
         if mission.combats and #mission.combats > 0 then
-            local uc, ucp = calculate_combat_uptime(active_periods, mission)
+            local uc, ucp = calculate_combat_uptime(active_periods, mission.combats)
             uptime_combat = uc or 0
             uptime_combat_percentage = ucp or 0
         end
-
-        -- Non-stackable: represent as single-stack arrays for compatibility
-        local time_per_stack = { [1] = total_uptime }
-        local combat_time_per_stack = { [1] = uptime_combat }
-        local combat_percentage_per_stack = calculate_combat_percentage_per_stack(combat_time_per_stack, total_combat_time)
+        local weapon_buffs = {}
+        for buff_name, buff_data in pairs(buffs) do
+            if buff_data.related_item and buff_data.related_item.name == slot_name then
+                weapon_buffs[buff_name] = generate_display_values_for_buff(buff_data, mission_time, active_combat_periods)
+            end
+        end
 
         weapon_display_values[slot_name] = {
             uptime = total_uptime,
             uptime_percentage = uptime_percentage,
             uptime_combat = uptime_combat,
             uptime_combat_percentage = uptime_combat_percentage,
-            time_per_stack = time_per_stack,
-            combat_time_per_stack = combat_time_per_stack,
-            combat_percentage_per_stack = combat_percentage_per_stack,
-            icon = nil,
-            gradient_map = nil,
+            active_periods = active_periods,
+            active_combat_periods = active_combat_periods,
             tooltip = { title = (slot_data and slot_data.name) or slot_name, description = "" },
-            max_stacks = 1,
-            stackable = false,
-            time_at_max_stack = time_per_stack[1] or 0,
-            combat_time_at_max_stack = combat_time_per_stack[1] or 0,
-            combat_percentage_at_max_stack = (uptime_combat > 0) and ((combat_time_per_stack[1] or 0) / uptime_combat * 100) or 0,
-            average_stacks = 1,
-            average_stacks_combat = 1,
+            buffs = weapon_buffs
         }
     end
 
     return weapon_display_values
 end
 
-function generate_display_values_for_buffs(mission, buffs)
+function generate_display_values_for_buffs(mission, buffs, handle_weapon_blessing_separately)
     local buff_display_values = {}
+
+    local mission_time = mission.end_time - mission.start_time
 
     if buffs then
         for buff_name, buff_data in pairs(buffs) do
-            buff_display_values[buff_name] = generate_display_values_for_buff(mission, buff_data)
+            local is_weapon_buff = buff_data.related_item
+            local show_buff = not is_weapon_buff or not handle_weapon_blessing_separately
+            if show_buff then
+                buff_display_values[buff_name] = generate_display_values_for_buff(buff_data, mission_time, mission.combats)
+            end
         end
     end
     return buff_display_values
 end
 
-function generate_display_values_for_buff(mission, buff)
+function generate_display_values_for_buff(buff, mission_time, combats)
     local max_stacks = buff.max_stacks or 1
 
     local active_periods = extract_active_periods(buff.events)
     local total_uptime = calculate_uptime(active_periods)
 
-    local mission_time = mission.end_time - mission.start_time
-    local combat_time = calculate_total_combat_time(mission)
+    local mission_combat_time = calculate_total_time(combats)
+
     local uptime_percentage = (total_uptime / mission_time) * 100
 
     -- Initialize combat uptime variables
@@ -145,15 +120,15 @@ function generate_display_values_for_buff(mission, buff)
     local total_combat_time = 0
 
     -- Process buff events to calculate combat uptime
-    if buff.events and mission.combats then
-        uptime_combat, uptime_combat_percentage, total_combat_time = calculate_combat_uptime(active_periods, mission)
+    if buff.events and combats then
+        uptime_combat, uptime_combat_percentage, total_combat_time = calculate_combat_uptime(active_periods, combats)
     end
 
     -- Calculate time per stack
     local time_per_stack = calculate_time_per_stack(buff.events, max_stacks)
 
     -- Calculate combat time per stack
-    local combat_time_per_stack = calculate_combat_time_per_stack(buff.events, mission, max_stacks)
+    local combat_time_per_stack = calculate_combat_time_per_stack(buff.events, combats, max_stacks)
 
     local combat_time_at_max_stack = combat_time_per_stack[max_stacks] or 0
 
@@ -168,7 +143,7 @@ function generate_display_values_for_buff(mission, buff)
 
         time_per_stack = time_per_stack,
         combat_time_per_stack = combat_time_per_stack,
-        combat_percentage_per_stack = calculate_combat_percentage_per_stack(combat_time_per_stack, combat_time),
+        combat_percentage_per_stack = calculate_combat_percentage_per_stack(combat_time_per_stack, mission_combat_time),
 
         time_at_max_stack = time_per_stack[max_stacks] or 0,
         combat_time_at_max_stack = combat_time_at_max_stack,
@@ -185,17 +160,17 @@ function generate_display_values_for_buff(mission, buff)
 end
 
 -- Extract active periods from buff events
-function extract_active_periods(buff_events)
+function extract_active_periods(events)
     local active_periods = {}
     local current_period = nil
 
-    for _, event in ipairs(buff_events) do
-        if event.type == "add" then
+    for _, event in ipairs(events) do
+        if event.type == "add" or event.type == "equipped" then
             current_period = {
                 start_time = event.time,
                 end_time = nil
             }
-        elseif event.type == "remove" and current_period then
+        elseif (event.type == "remove" or event.type == "unequipped") and current_period then
             current_period.end_time = event.time
             table.insert(active_periods, current_period)
             current_period = nil
@@ -242,30 +217,56 @@ function calculate_total_combat_time(mission)
 end
 
 -- Calculate combat uptime and percentage
-function calculate_combat_uptime(active_periods, mission)
-    local uptime_combat = 0
+function calculate_combat_uptime(active_periods, combats)
     local uptime_combat_percentage = 0
 
-    -- Calculate overlap between active periods and combat periods
-    for _, active_period in ipairs(active_periods) do
-        for _, combat in ipairs(mission.combats) do
-            local overlap_start = math.max(active_period.start_time, combat.start_time)
-            local overlap_end = math.min(active_period.end_time, combat.end_time)
-
-            if overlap_end > overlap_start then
-                uptime_combat = uptime_combat + (overlap_end - overlap_start)
-            end
-        end
-    end
-
-    -- Calculate combat uptime percentage
-    local total_combat_time = calculate_total_combat_time(mission)
+    local active_combat_periods = get_periods_overlaps(active_periods, combats)
+    local uptime_combat = calculate_total_time(active_combat_periods)
+    local total_combat_time = calculate_total_time(combats)
 
     if total_combat_time > 0 then
         uptime_combat_percentage = (uptime_combat / total_combat_time) * 100
     end
 
     return uptime_combat, uptime_combat_percentage, total_combat_time
+end
+
+function get_periods_overlaps(periods_a, periods_b)
+    local overlaps = {}
+
+    local i, j = 1, 1
+    while i <= #periods_a and j <= #periods_b do
+        local a = periods_a[i]
+        local b = periods_b[j]
+
+        -- Calculate overlap between current periods
+        local overlap_start = math.max(a.start_time, b.start_time)
+        local overlap_end = math.min(a.end_time, b.end_time)
+
+        -- If overlap exists, record it
+        if overlap_start < overlap_end then
+            table.insert(overlaps, { start_time = overlap_start, end_time = overlap_end })
+        end
+
+        -- Move the pointer that ends first
+        if a.end_time < b.end_time then
+            i = i + 1
+        else
+            j = j + 1
+        end
+    end
+
+    return overlaps
+end
+
+function calculate_total_time(periods)
+    local total_time = 0
+
+    for _, period in ipairs(periods) do
+        total_time = total_time + (period.end_time - period.start_time)
+    end
+
+    return total_time
 end
 
 -- Calculate time spent at each stack level
@@ -300,13 +301,13 @@ function calculate_time_per_stack(buff_events, max_stacks)
     return time_per_stack
 end
 
-function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
+function calculate_combat_time_per_stack(buff_events, combats, max_stacks)
     local combat_time_per_stack = {}
     for i = 1, max_stacks do
         combat_time_per_stack[i] = 0
     end
 
-    if buff_events and mission.combats then
+    if buff_events and combats then
         local current_stack = 0
         local last_time = nil
 
@@ -314,7 +315,7 @@ function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
             -- If we have a previous event and valid stack, calculate combat time for that stack
             if last_time and current_stack > 0 then
                 -- For each period between events, check overlap with combat
-                for _, combat in ipairs(mission.combats) do
+                for _, combat in ipairs(combats) do
                     local period_start = last_time
                     local period_end = event.time
 
@@ -329,7 +330,7 @@ function calculate_combat_time_per_stack(buff_events, mission, max_stacks)
 
             -- Update stack count and time for next calculation
             if event.type == "add" or event.type == "stack_change" then
-                current_stack = event.stack_count or 0
+                current_stack = event.stack_count or 1
             elseif event.type == "remove" then
                 current_stack = 0
             end

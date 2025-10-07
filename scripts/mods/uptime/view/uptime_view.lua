@@ -75,13 +75,18 @@ function UptimeView:create_rows(buffs, weapons)
         index = index + 1
     end
 
-    --for name, weapon_entry in pairs(weapons) do
-    --    local widgets = renderer.create_row(self, weapon_entry, index)
-    --    for _, widget in pairs(widgets) do
-    --        self._widgets[#self._widgets + 1] = widget
-    --    end
-    --    index = index + 1
-    --end
+    for weapon_name, weapon_entry in pairs(weapons or {}) do
+        local weapon_widget = renderer.create_weapon_row(self, weapon_name, weapon_entry, index)
+        self._widgets[#self._widgets + 1] = weapon_widget
+        index = index + 1
+        for _, buff in pairs(weapon_entry.buffs) do
+            local widgets = renderer.create_row(self, buff, index)
+            for _, widget in pairs(widgets) do
+                self._widgets[#self._widgets + 1] = widget
+            end
+            index = index + 1
+        end
+    end
 
     local horizontal_margins_for_border = 75
     local final_width = renderer.get_width() + horizontal_margins_for_border
