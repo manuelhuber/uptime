@@ -5,7 +5,8 @@ function mod:start_weapon_tracking()
     weapon_tracking = {}
 end
 
-function mod:end_weapon_tracking()
+function mod:end_weapon_tracking(end_time)
+    finalize_tracking(end_time)
     return weapon_tracking
 end
 
@@ -32,11 +33,25 @@ function add_wielded(self, slot_name, equipped, t)
         weapon_tracking[name] = init_slot(name)
     end
     table.insert(weapon_tracking[name].events, {
-        equipped = equipped,
+        type = equipped and "equipped" or "unequipped",
         time = mod:now()
     })
 end
 
+function finalize_tracking(tracking_end_time)
+    for _, weapon_data in pairs(weapon_tracking) do
+        local events = weapon_data.events
+        if #events > 0 then
+            local last_event = events[#events]
+            if last_event.type == "equipped" then
+                table.insert(events, {
+                    type = "unequipped",
+                    time = tracking_end_time
+                })
+            end
+        end
+    end
+end
 function get_name(self, slot_name)
     local weapon = self._weapons[slot_name]
     local item = weapon.item
