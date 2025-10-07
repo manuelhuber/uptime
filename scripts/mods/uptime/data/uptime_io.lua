@@ -176,9 +176,12 @@ end
 
 mod.enforce_history_limit = function(self, max_files)
     max_files = tonumber(max_files) or 30
-
     local appdata = self:appdata_path()
     local file_names = scandir(appdata)
+
+    if not file_names or #file_names == 0 then
+        return
+    end
 
     local files = {}
     for _, name in pairs(file_names) do
@@ -190,20 +193,33 @@ mod.enforce_history_limit = function(self, max_files)
 
     local count = #files
 
+    if count <= max_files then
+        return
+    end
+
     table.sort(files, function(a, b)
         return a.ts < b.ts
     end)
 
     local to_delete = count - max_files
-    for i = 1, to_delete do
-        local full_path = appdata .. files[i].name
-        self:delete_entry({ file_path = full_path })
+
+    if to_delete > 0 then
+        for i = 1, to_delete do
+            -- Safety check that files[i] exists
+            if files[i] and files[i].name then
+                local full_path = appdata .. files[i].name
+                self:delete_entry({ file_path = full_path })
+            end
+        end
     end
 
     local remaining = {}
     for i = to_delete + 1, count do
-        remaining[#remaining + 1] = files[i].name
+        if files[i] and files[i].name then
+            remaining[#remaining + 1] = files[i].name
+        end
     end
+
     self:set_history_entries_cache(remaining)
 end
 
