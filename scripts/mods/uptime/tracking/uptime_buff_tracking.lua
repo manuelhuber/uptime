@@ -110,7 +110,7 @@ function ignore_buff(buff_data)
 
     local buff_category = buff_template.buff_category
     local wrong_category = not displayed_buff_categories[buff_category]
-    local no_stacks = buff_instance:stat_buff_stacking_count() == 0
+    local no_stacks = buff_instance:visual_stack_count() == 0
     local is_debuff = buff_instance:is_negative()
     local not_shown = not buff_data.show
     local not_active = not hud_data.is_active
@@ -198,8 +198,8 @@ function get_actual_max(buff_instance)
     local child_buff_template = template.child_buff_template
     local child_template = BuffTemplates[child_buff_template]
     if child_template then
-        -- https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/parent_proc_buff.lua#L15
-        return (buff_instance._template_override_data.max_stacks or child_template.max_stacks or 1 or 1)
+        -- https://github.com/Aussiemon/Darktide-Source-Code/blob/72cde1c088677d22b3830d9681d015167782b10a/scripts/extension_systems/buff/buffs/parent_proc_buff.lua#L30
+        return (buff_instance._template_override_data.max_stacks or child_template.max_stacks or 1)
     end
 
     return buff_instance:max_stacks() or 1
