@@ -60,7 +60,8 @@ end)
 
 mod:hook(CLASS.StateGameplay, "on_enter", function(func, self, parent, params, creation_context, ...)
     local mission_name = params.mission_name
-    if mission_name ~= "hub_ship" then
+    local track_mission = mission_name ~= "hub_ship" and (mod:get("track_meat_grinder") or mission_name ~= "tg_shooting_range")
+    if track_mission then
         local tracking_started = mod:try_start_tracking(params)
         if not tracking_started then
             mod:echo("FAILED to start tracking: " .. mod.libs.missions.localize_name(mission_name))

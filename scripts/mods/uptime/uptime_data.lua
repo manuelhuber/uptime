@@ -13,6 +13,15 @@ return {
               keybind_type = "view_toggle",
               view_name = "uptime_history_view"
             }, {
+                setting_id = "number_of_save_files",
+                type = "numeric",
+                default_value = 30,
+                range = { 1, 100 },
+            }, {
+                setting_id = "track_meat_grinder",
+                type = "checkbox",
+                default_value = false,
+            }, {
                 setting_id = "data_display_settings",
                 type = "group",
                 sub_widgets = {
