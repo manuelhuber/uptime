@@ -39,7 +39,6 @@ end)
 -- Open uptime history view
 mod:command("uv", "Open uptime history view", function()
     mod:close_view()
-    --Managers.ui:open_view(view_name, nil, false, false, nil, { entries = { "hello", "world" } }, { use_transition_ui = false })
 end)
 
 mod:command("uc", "close uptime history view", function()
