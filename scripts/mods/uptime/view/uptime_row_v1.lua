@@ -250,26 +250,24 @@ function create_row_widget(uptime_view, buff, index)
     return { widget, unpack(additional_widgets) }
 end
 
-function weapon_row_template()
-    return {
-        {
-            pass_type = 'text',
-            value_id = "text",
-            style = {
-                size = { get_width(), ROW_HEIGHT },
-                text_vertical_alignment = "center",
-                line_spacing = 1.2,
-                font_size = 26,
-                drop_shadow = true,
-                font_type = "machine_medium",
-                text_color = Color.terminal_text_header(255, true),
-            },
-        }
+local weapon_row_template = {
+    {
+        pass_type = 'text',
+        value_id = "text",
+        style = {
+            size = { get_width(), ROW_HEIGHT },
+            text_vertical_alignment = "center",
+            line_spacing = 1.2,
+            font_size = 26,
+            drop_shadow = true,
+            font_type = "machine_medium",
+            text_color = Color.terminal_text_header(255, true),
+        },
     }
-end
+}
 
 function get_weapon_row(uptime_view, weapon_name, weapon_entry, index)
-    local widget_def = UIWidget.create_definition(weapon_row_template(width), Definitions.row_scene_graph_id)
+    local widget_def = UIWidget.create_definition(weapon_row_template, Definitions.row_scene_graph_id)
     local widget = uptime_view:_create_widget("weapon_row_" .. weapon_name, widget_def)
     local weapon_combat_uptime = mod.ui.format_seconds(weapon_entry.uptime_combat)
     local weapon_combat_uptime_percentage = string.format("%.1f", weapon_entry.uptime_combat_percentage) .. "%"
