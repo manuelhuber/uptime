@@ -69,37 +69,31 @@ mod.create_uptime_history_entry_path = function(self)
     return self:appdata_path() .. file_name, file_name
 end
 
--- Get the current date/time as a timestamp
 mod.current_date = function(self)
     return mod.lib.os.time(mod.lib.os.date("*t"))
 end
 
--- Save the uptime data to a file
 mod.save_entry = function(self, entry)
 
-    -- Create appdata folder
     self:create_uptime_history_directory()
 
-    -- Generate file path
     local path, file_name = self:create_uptime_history_entry_path()
-
-    -- Open file
     local file = assert(_io.open(path, "w+"))
 
     for _, buff in pairs(entry.buffs) do
-        -- this field is just for debuggin, don't save it
         buff.instance = nil
     end
 
     local entry_json = json.encode(entry)
     file:write(entry_json)
 
-    -- Close file
     file:close()
 
     local cache = self:get_history_entries_cache()
     cache[#cache + 1] = file_name
     self:set_history_entries_cache(cache)
+
+    self:enforce_history_limit(mod:get("number_of_save_files"))
 end
 
 -- Load uptime data from a file
@@ -143,7 +137,6 @@ local function scandir(directory)
         file_names[i] = filename
     end
     pfile:close()
-    mod:echo("History entries loaded from directory")
     return file_names
 end
 
@@ -180,6 +173,40 @@ end
 mod.set_history_entries_cache = function(self, entries)
     self:set("uptime_history_entries", entries)
 end
+
+mod.enforce_history_limit = function(self, max_files)
+    max_files = tonumber(max_files) or 30
+
+    local appdata = self:appdata_path()
+    local file_names = scandir(appdata)
+
+    local files = {}
+    for _, name in pairs(file_names) do
+        local ts = tonumber(string.match(name, "^(%d+)"))
+        if ts then
+            files[#files + 1] = { name = name, ts = ts }
+        end
+    end
+
+    local count = #files
+
+    table.sort(files, function(a, b)
+        return a.ts < b.ts
+    end)
+
+    local to_delete = count - max_files
+    for i = 1, to_delete do
+        local full_path = appdata .. files[i].name
+        self:delete_entry({ file_path = full_path })
+    end
+
+    local remaining = {}
+    for i = to_delete + 1, count do
+        remaining[#remaining + 1] = files[i].name
+    end
+    self:set_history_entries_cache(remaining)
+end
+
 -- Delete an entry and update the cache
 function ends_with(str, ending)
     return ending == "" or str:sub(-#ending) == ending
