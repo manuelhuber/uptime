@@ -51,7 +51,7 @@ function mod:start_buff_tracking()
 end
 
 function mod:end_buff_tracking(end_time)
-    finalize_tracking(end_time)
+    finalize_buff_tracking(end_time)
     return tracked_buffs
 end
 
@@ -246,7 +246,7 @@ function trait_belongs_to_buff(trait_definition, buff_title)
     return false
 end
 
-function finalize_tracking(tracking_end_time)
+function finalize_buff_tracking(tracking_end_time)
     for buff_name, buff_data in pairs(tracked_buffs) do
         -- If the buff is still active at the end of tracking, add a remove event
         if buff_data.is_active then

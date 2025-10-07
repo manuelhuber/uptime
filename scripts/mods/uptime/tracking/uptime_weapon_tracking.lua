@@ -6,7 +6,7 @@ function mod:start_weapon_tracking()
 end
 
 function mod:end_weapon_tracking(end_time)
-    finalize_tracking(end_time)
+    finalize_weapon_tracking(end_time)
     return weapon_tracking
 end
 
@@ -38,8 +38,8 @@ function add_wielded(self, slot_name, equipped, t)
     })
 end
 
-function finalize_tracking(tracking_end_time)
-    for _, weapon_data in pairs(weapon_tracking) do
+function finalize_weapon_tracking(tracking_end_time)
+    for name, weapon_data in pairs(weapon_tracking) do
         local events = weapon_data.events
         if #events > 0 then
             local last_event = events[#events]
@@ -52,6 +52,7 @@ function finalize_tracking(tracking_end_time)
         end
     end
 end
+
 function get_name(self, slot_name)
     local weapon = self._weapons[slot_name]
     local item = weapon.item
