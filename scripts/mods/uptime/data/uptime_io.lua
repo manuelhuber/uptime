@@ -93,7 +93,9 @@ mod.save_entry = function(self, entry)
     cache[#cache + 1] = file_name
     self:set_history_entries_cache(cache)
 
-    self:enforce_history_limit(mod:get("number_of_save_files"))
+    if mod:get("delete_old_entries") then
+        self:enforce_history_limit(mod:get("number_of_save_files"))
+    end
 end
 
 -- Load uptime data from a file
