@@ -174,7 +174,6 @@ function init_buff(buff_instance)
         category = template.buff_category,
         related_talents = template.related_talents,
         related_item = get_optional_item_info(buff_instance),
-        instance = buff_instance
     }
 end
 
@@ -209,12 +208,8 @@ function get_optional_item_info(buff_instance)
     local context = (buff_instance._template_context or {})
     local item = context.source_item or context.item
     if not item or not item.traits then
-        mod.buffs_without_item = mod.buffs_without_item or {}
-        mod.buffs_without_item[#mod.buffs_without_item + 1] = buff_instance
         return nil
     end
-    mod.buffs_with_item = mod.buffs_with_item or {}
-    mod.buffs_with_item[#mod.buffs_with_item + 1] = buff_instance
     local blessing
     for _, trait in pairs(item.traits) do
         local trait_item = MasterItems.get_item(trait.id)
